@@ -54,9 +54,9 @@ const int gidSize = 96;
 
 #define SINGLE_END
 #ifdef SINGLE_END
-const int junctionSize = 5;
+#define junctionSize  5
 #elif defined(PAIR_END)
-const int junctionSize = 10;
+#define junctionSize  10
 #endif
 
 const uint64_t refLength = (uint64_t)2 << 31;
@@ -69,12 +69,12 @@ const int blockSize = 1024;
 const float step = 0.01;
 const int readLength = 100;
 
-typedef struct ALIGN(4) {
+typedef struct {
     int32_t start_;
     int32_t end_;
 } Junction, Anchor, Assist;
 
-struct ALIGN(8) read_core_t {
+struct  read_core_t {
     // with junction
     uint32_t junctionCount;
     Junction junctions[junctionSize];

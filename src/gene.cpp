@@ -1,12 +1,11 @@
 #include "gene.h"
-#include "cl_prepare.h"
+#include "cl_cpp_utility.cpp"
 #include "parse.h"
-#include <CL/cl.h>
-#include <CL/cl.hpp>
-#include <boost/compute.hpp>
+#include "boost/compute.hpp"
 #include <sys/stat.h>
 
-
+BOOST_COMPUTE_ADAPT_STRUCT(Junction ,Junction,(start_,end_))
+BOOST_COMPUTE_ADAPT_STRUCT(read_core_t,read_core_t,(junctionCount,junctions))
 int32_t nextPow2(int32_t x)
 {
         --x;
@@ -150,7 +149,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
             boost::compute::system::default_device();
         boost::compute::context bc_context(bc_gpu);
         boost::compute::command_queue bc_queue(bc_context, bc_gpu);
-
+	
         int32_t numOfBin = int32_t(h_bins.start_.size());
         int32_t numOfRead = int32_t(h_bins.start_.size());
         int32_t numOfASE = int32_t(h_ases.start_.size());
@@ -177,10 +176,16 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         boost::compute::vector<read_core_t> bc_d_cores((uint64_t)numOfRead,
                                                        bc_context);
 
-        boost::compute::copy(h_bins.start_.begin(), h_bins.start_.end(),
+        boost::compute::copy(h_reads.start_.begin(), h_reads.start_.end(),
                              bc_d_starts.begin(), bc_queue);
+	boost::compute::copy(h_reads.end_.begin(), h_reads.end_.end(),
+                             bc_d_ends.begin(), bc_queue);
+	boost::compute::copy(h_reads.strand.begin(), h_reads.strand.end(),
+                             bc_d_strand.begin(), bc_queue);
+	boost::compute::copy(h_reads.core.begin(), h_reads.core.end(),
+                             bc_d_cores.begin(), bc_queue);
 
-        boost::compute::vector<int> d_indices((uint64_t)numOfRead, context);
+        boost::compute::vector<int> d_indices((uint64_t)numOfRead, bc_context);
         boost::compute::iota(d_indices.begin(), d_indices.end(), 0, bc_queue);
 
         /* DONE CL: thrust sort by key*/
@@ -188,21 +193,21 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                 // boost::compute::gather(d_indices.begin(), d_indices.end(),
                 // bc_d_starts, bc_d_starts);
                 boost::compute::gather(d_indices.begin(), d_indices.end(),
-                                       bc_d_ends, bc_d_ends);
+                                       bc_d_ends.begin(), bc_d_ends.begin());
                 boost::compute::gather(d_indices.begin(), d_indices.end(),
-                                       bc_d_strand, bc_d_strand);
+                                       bc_d_strand.begin(), bc_d_strand.begin());
                 boost::compute::gather(d_indices.begin(), d_indices.end(),
-                                       bc_d_cores, bc_d_cores);
+                                       bc_d_cores.begin(), bc_d_cores.begin());
         } else {
                 perror("boostSort return False");
                 exit(EXIT_FAILURE);
         }
-        // copy back to h_bins
-        boost::compute::copy(h_bins.end_.begin(), h_bins.end_.end(),
+        // copy back to h_reads
+        boost::compute::copy(h_reads.end_.begin(), h_reads.end_.end(),
                              bc_d_ends.begin(), bc_queue);
-        boost::compute::copy(h_bins.strand.begin(), h_bins.strand.end(),
+        boost::compute::copy(h_reads.strand.begin(), h_reads.strand.end(),
                              bc_d_strand.begin(), bc_queue);
-        boost::compute::copy(h_bins.core.begin(), h_bins.core.end(),
+        boost::compute::copy(h_reads.core.begin(), h_reads.core.end(),
                              bc_d_cores.begin(), bc_queue);
 
         /* Start CL setup*/
@@ -212,8 +217,11 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                                NULL);
         /* import CL kernel first*/
         std::string kernelFileName = "";
-        kernelList allKernel = initCompileKernel_List(
-            CLEnv.selectedDevices, CLEnv.context, kernelFileName);
+        //kernelList allKernel = initCompileKernel_List(
+        //   CLEnv.selectedDevices, CLEnv.context, kernelFileName);
+	kernelList allKernel = initCompileKernel_List(
+            CLEnv.selectedDevices, CLEnv.context);
+
         cl::Buffer cl_assist_reads(CLEnv.context, CL_MEM_READ_WRITE,
                                    sizeof(Assist) * numOfRead, NULL);
         cl::NDRange offset(0, 0);
@@ -265,7 +273,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         boost::compute::vector<float> bc_tempTPM(numOfBin,bc_context);
         float bc_tpmCounter=0.0f;
         boost::compute::reduce(bc_tempTPM.begin(),bc_tempTPM.end(),&bc_tpmCounter);
-        queue.enqueueWriteBuffer(d_tpmCounter, CL_TRUE, sizeof(Float),d_tpmCounter);
+        queue.enqueueWriteBuffer(d_tpmCounter, CL_TRUE,0, sizeof(float),&bc_tpmCounter);
         autoSetKernelArgs(allKernel.gpu_count_TPM, cl_d_bins.start_,
                           cl_d_bins.end_, cl_d_bins.strand, cl_d_bins.core,
                           numOfBin, d_tempTPM, d_tpmCounter);
@@ -291,7 +299,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         // auxiliary array
         cl::Buffer d_assist_read_ases(CLEnv.context, CL_MEM_READ_WRITE,
                                       sizeof(Assist) * numOfASE);
-        cl::Buffer ACT(CLEnv.Context, CL_MEM_READ_WRITE,
+        cl::Buffer ACT(CLEnv.context, CL_MEM_READ_WRITE,
                        sizeof(ASECounter) * numOfASE);
 
         // compute number of thread block
@@ -379,7 +387,7 @@ int main(int argc, char **argv)
 
         std::cout << "start kernel program..." << std::endl;
 
-        cl_HandleBin(h_bins, h_bins, h_ases);
+        cl_HandleBin(h_bins, h_reads, h_ases);
 
         gettimeofday(&t2_time, 0);
         std::cout << "computing spent time: "

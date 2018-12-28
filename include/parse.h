@@ -3,6 +3,7 @@
 
 #include "gene.h"
 #include "gff.h"
+#include "c_string.h"
 #include "htslib/sam.h"
 #include "sys/sysinfo.h"
 

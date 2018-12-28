@@ -36,6 +36,7 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 
 set(CHIP_SOURCE_DIR ${CMAKE_SOURCE_DIR})
 set(GFF_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/gff)
+set(COMPUTE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/compute)
 file(GLOB GFF_SRCS ${GFF_SOURCE_DIR}/src/*.cpp)
 
 include_directories(
@@ -47,8 +48,9 @@ include_directories(
         ${ZLIB_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIR}
         ${GFF_SOURCE_DIR}/include
+	${COMPUTE_SOURCE_DIR}/include
 )
 
 #cuda_add_executable(paean ${CHIP_SOURCE_DIR}/src/gene.cu ${GFF_SRCS})
-add_executable(paean ${CHIP_SOURCE_DIR}/src/gene.cu ${GFF_SRCS})
+add_executable(paean ${CHIP_SOURCE_DIR}/src/gene.cpp ${GFF_SRCS} )
 target_link_libraries(paean ${HTSlib_LIBRARY} ${ZLIB_LIBRARIES} ${OPENCL_LIBRARIES} ${Boost_LIBRARIES} Threads::Threads)

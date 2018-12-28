@@ -1,8 +1,12 @@
+#ifndef CL_VERSION_1_2
 #define CL_VERSION_1_2
+#endif
+#define CL_USE_DEPRECATED_OPENCL_1_1_APIS
 #define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.h>
+//#include <CL/cl.h>
 #include <CL/cl.hpp>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -230,15 +234,23 @@ cl_context initCLSetup()
 
 
 /*template function to generate automatically set kernel args*/
-template <class... Args>
-void autoSetKernelArgs(cl::Kernel kernel, Args &&... args)
+void autoSetKernelArgs_(cl::Kernel kernel,int &order){}
+template <typename Arg1,class... Args>
+void autoSetKernelArgs_(cl::Kernel kernel, int& order,const Arg1& arg1,const Args& ... args)
 {
-        int32_t count = sizeof...(args);
-        for (int i = 0; i < count; ++i) {
-                kernel.setArg(i, std::forward<Args>(args)...);
-        }
+        //int32_t count = sizeof...(args);
+	
+        //for (int i = 0; i < count; ++i) {
+        //        kernel.setArg(i, std::forward<Args>(args)...);
+        //}
+	kernel.setArg(order,arg1);
+	autoSetKernelArgs_(kernel,order,args...);
 }
-
+template <class... Args>
+void autoSetKernelArgs(cl::Kernel kernel,const Args& ... args){
+	int order =0;
+	autoSetKernelArgs_(kernel,order,args...);
+}
 struct env {
         cl::Context context;
         std::vector<cl::Device> selectedDevices;
@@ -253,7 +265,7 @@ env initCppCLSetup()
         std::string selectedPlatformStringAMD("Advanced Micro Devices,Inc");
         env returnEnv;
         unsigned long selectedPlatformID = 0;
-        try {
+        {
                 cl::Platform::get(&platforms);
                 std::vector<std::vector<cl::Device>> allDevices(
                     platforms.size());
@@ -273,9 +285,12 @@ env initCppCLSetup()
                 returnEnv.context = contexts;
                 returnEnv.selectedDevices = selectedDevices;
                 return returnEnv;
-        } catch (cl::Error e) {
+        }
+	/* 
+	catch (cl::Error e) {
                 std::cout << e.what() << ": Error code" << e.err() << std::endl;
         }
+	*/
         return returnEnv;
 }
 
@@ -293,7 +308,8 @@ struct kernelList {
 /*compile kernels and return*/
 std::vector<cl::Kernel> initCompileKernel(std::vector<cl::Device> devices,
                                           cl::Context contexts,
-                                          std::string programSource)
+					  std::string programSource
+                                          )
 {
         std::ifstream programFile(programSource.c_str());
 	//std::ifstream programFile("cl_kernel.h");
@@ -323,10 +339,10 @@ std::vector<cl::Kernel> initCompileKernel(std::vector<cl::Device> devices,
 
 /*compile kernels and return*/
 kernelList initCompileKernel_List(std::vector<cl::Device> devices,
-                              cl::Context contexts, std::string programSource)
+                              cl::Context contexts)
 {
-        std::ifstream programFile(programSource.c_str());
-	//std::ifstream programFile("cl_kernel.h");
+        //std::ifstream programFile(programSource.c_str());
+	std::ifstream programFile("cl_kernel.h");
         std::string programString(std::istreambuf_iterator<char>(programFile),
                                   (std::istreambuf_iterator<char>()));
         cl::Program::Sources source(
