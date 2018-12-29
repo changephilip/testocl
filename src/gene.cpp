@@ -3,7 +3,7 @@
 #include "parse.h"
 #include "boost/compute.hpp"
 #include <sys/stat.h>
-
+#define BOOST_COMPUTE_DEBUG_KERNEL_COMPILATION
 BOOST_COMPUTE_ADAPT_STRUCT(Junction ,Junction,(start_,end_))
 BOOST_COMPUTE_ADAPT_STRUCT(read_core_t,read_core_t,(junctionCount,junctions))
 int32_t nextPow2(int32_t x)
@@ -151,7 +151,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         boost::compute::command_queue bc_queue(bc_context, bc_gpu);
 	
         int32_t numOfBin = int32_t(h_bins.start_.size());
-        int32_t numOfRead = int32_t(h_bins.start_.size());
+        int32_t numOfRead = int32_t(h_reads.start_.size());
         int32_t numOfASE = int32_t(h_ases.start_.size());
         std::cout << "numOfBin: " << numOfBin << std::endl;
         std::cout << "numOfRead: " << numOfRead << std::endl;
@@ -186,7 +186,12 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                              bc_d_cores.begin(), bc_queue);
 
         boost::compute::vector<int> d_indices((uint64_t)numOfRead, bc_context);
-        boost::compute::iota(d_indices.begin(), d_indices.end(), 0, bc_queue);
+	std::vector<int> h_indices(numOfRead);
+	for (int tmp=0;tmp<numOfRead;tmp++){
+		h_indices[tmp]=tmp;
+	}
+	boost::compute::copy(h_indices.begin(),h_indices.end(),d_indices.begin(),bc_queue);
+        //boost::compute::iota(d_indices.begin(), d_indices.end(), 0, bc_queue);
 
         /* DONE CL: thrust sort by key*/
         if (boostSort(bc_d_starts, d_indices, bc_queue)) {
