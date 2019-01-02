@@ -10,13 +10,13 @@
 #include <iomanip>
 #include <CL/cl.h>
 #include <CL/cl.hpp>
-
 // boost
+#define BOOST_COMPUTE_DEBUG_KERNEL_COMPILATION
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-
+#include <boost/compute.hpp>
 #define _LINUX_
 #ifdef _LINUX_
 #include <ctime>

@@ -29,6 +29,8 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 #find_package(CUDA 9.2 REQUIRED)
 #find_package(Thrust)
+set(BOOST_ROOT "/home/qianjiaqiang/boost_1_66_0")
+set(BOOST_NO_SYSTEM_PATHS FALSE)
 find_package(OpenCL REQUIRED)
 find_package(HTSlib)
 find_package(Threads)
@@ -37,9 +39,9 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 
 set(CHIP_SOURCE_DIR ${CMAKE_SOURCE_DIR})
 set(GFF_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/gff)
-set(COMPUTE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/compute)
+#set(COMPUTE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/compute)
 file(GLOB GFF_SRCS ${GFF_SOURCE_DIR}/src/*.cpp)
-
+list(APPEND Boost_LIBRARIES "/home/qianjiaqiang/boost_1_66_0/stage/lib/libboost_serialization.so")
 include_directories(
 	#        ${CUDA_INCLUDE_DIRS}
 	#        ${THRUST_INCLUDE_DIR}
@@ -49,7 +51,7 @@ include_directories(
         ${ZLIB_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIR}
         ${GFF_SOURCE_DIR}/include
-	${COMPUTE_SOURCE_DIR}/include
+	#${COMPUTE_SOURCE_DIR}/include
 )
 
 #cuda_add_executable(paean ${CHIP_SOURCE_DIR}/src/gene.cu ${GFF_SRCS})
