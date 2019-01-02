@@ -234,23 +234,38 @@ cl_context initCLSetup()
 
 
 /*template function to generate automatically set kernel args*/
-void autoSetKernelArgs_(cl::Kernel kernel,int &order){}
+void autoSetKernelArgs_(cl::Kernel& kernel,int &order){}
 template <typename Arg1,class... Args>
-void autoSetKernelArgs_(cl::Kernel kernel, int& order,const Arg1& arg1,const Args& ... args)
+void autoSetKernelArgs_(cl::Kernel& kernel, int& order,const Arg1& arg1,const Args& ... args)
 {
         //int32_t count = sizeof...(args);
 	
         //for (int i = 0; i < count; ++i) {
         //        kernel.setArg(i, std::forward<Args>(args)...);
         //}
-	kernel.setArg(order,arg1);
-  order = order+1;
+        cl_int err;
+        printf("%d\t",order);
+	err=kernel.setArg(order,arg1);
+	if (err !=CL_SUCCESS){
+		printf("arg %dth is not right!\n",order);
+		if (err == CL_INVALID_KERNEL){
+			printf("Invalid kernel\n");
+		}
+		if (err == CL_INVALID_ARG_INDEX){
+			printf("Invalid arg index\n");
+		}
+		if (err == CL_INVALID_ARG_VALUE){
+			printf("Invalid arg value\n");
+		}	
+	}
+  	order = order+1;
 	autoSetKernelArgs_(kernel,order,args...);
 }
 template <class... Args>
-void autoSetKernelArgs(cl::Kernel kernel,const Args& ... args){
+void autoSetKernelArgs(cl::Kernel &kernel,const Args& ... args){
 	int order =0;
 	autoSetKernelArgs_(kernel,order,args...);
+	printf("\n");
 }
 struct env {
         cl::Context context;
@@ -340,12 +355,76 @@ std::vector<cl::Kernel> initCompileKernel(std::vector<cl::Device> devices,
         return allKernels;
 }
 
+void checkCLBuild(cl_int &err){
+	if (err != CL_SUCCESS){
+		printf("Build Fail!\n");
+		if (err == CL_INVALID_VALUE){
+			printf("CL_INVALID_VALUE\n");
+		}
+		if (err == CL_INVALID_DEVICE){
+			printf("CL_INVALID_DEVICE\n");
+		}
+		if (err == CL_INVALID_BINARY){
+			printf("CL_INVALID_BINARY\n");
+		}
+		if (err == CL_INVALID_BUILD_OPTIONS){
+			printf("CL_INVALID_BUILD_OPTIONS\n");
+		}
+		if (err == CL_INVALID_OPERATION){
+			printf("CL_INVALID_OPERATION\n");
+		}
+		if (err == CL_COMPILER_NOT_AVAILABLE){
+			printf("CL_COMPILER_NOT_AVAILABLE\n");
+		}
+		if (err == CL_BUILD_PROGRAM_FAILURE){
+			printf("CL_BUILD_PROGRAM_FAILURE\n");
+		}
+		if (err == CL_INVALID_OPERATION){
+			printf("CL_INVALID_OPERATION\n");
+		}
+		if (err == CL_OUT_OF_RESOURCES){
+			printf("CL_OUT_OF_RESOURCES\n");
+		}
+		if (err == CL_OUT_OF_HOST_MEMORY){
+			printf("CL_OUT_OF_HOST_MEMORY\n");
+		}
+		if (err == CL_INVALID_DEVICE){
+			printf("CL_INVALID_DEVICE\n");
+		}
+	}	
+}
+inline void checkCLKernel(cl_int &err){
+	if (err != CL_SUCCESS){
+		printf("Kernel Fail!\n");
+		if ( err == CL_INVALID_PROGRAM){
+			printf("CL_INVALID_PROGRAM\n");
+		}
+		if ( err == CL_INVALID_PROGRAM_EXECUTABLE){
+			printf("CL_INVALID_PROGRAM_EXECUTABLE\n");
+		}
+		if ( err == CL_INVALID_KERNEL_NAME){
+			printf("CL_INVALID_KERNEL_NAME\n");
+		}
+		if ( err == CL_INVALID_KERNEL_DEFINITION){
+			printf("CL_INVALID_KERNEL_DEFINITION\n");
+		}
+		if ( err == CL_INVALID_VALUE){
+			printf("CL_INVALID_VALUE\n");
+		}
+		if ( err == CL_OUT_OF_RESOURCES){
+			printf("CL_OUT_OF_RESOURCES\n");
+		}
+		if ( err == CL_OUT_OF_HOST_MEMORY){
+			printf("CL_OUT_OF_HOST_MEMORY\n");
+		}
+	}
+}
 /*compile kernels and return*/
 kernelList initCompileKernel_List(std::vector<cl::Device> devices,
                               cl::Context contexts)
 {
         //std::ifstream programFile(programSource.c_str());
-	std::ifstream programFile("cl_kernel.h");
+	std::ifstream programFile("/home/qianjiaqiang/testocl/include/cl_kernel.cl");
         std::string programString(std::istreambuf_iterator<char>(programFile),
                                   (std::istreambuf_iterator<char>()));
         cl::Program::Sources source(
@@ -353,23 +432,31 @@ kernelList initCompileKernel_List(std::vector<cl::Device> devices,
             std::make_pair(programString.c_str(), programString.length() + 1));
         cl::Program program(contexts, source);
         char buildCLFlag[] = "-cl-std=CL1.2 -Werror";
-        program.build(devices, buildCLFlag);
-
+        cl_int err=program.build(devices, buildCLFlag);
+	checkCLBuild(err);
+	std::cout << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << std::endl;
         kernelList chipKernel;
 
         //chipKernel.gpu_try_assign_kernel =
         //   cl::Kernel(program, "gpu_try_assign_kernel");
         chipKernel.gather_kernel=
-                cl::Kernel(program,"gather_kernel");
+                cl::Kernel(program,"gather_kernel",&err);
+	checkCLKernel(err);
         chipKernel.gpu_assign_read_kernel =
-            cl::Kernel(program, "gpu_assign_read_kernel");
-        chipKernel.gpu_count_tempTPM = cl::Kernel(program, "gpu_count_tempTPM");
-        chipKernel.gpu_count_TPM = cl::Kernel(program, "gpu_count_TPM");
+            cl::Kernel(program, "gpu_assign_read_kernel",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_count_tempTPM = cl::Kernel(program, "gpu_count_tempTPM",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_count_TPM = cl::Kernel(program, "gpu_count_TPM",&err);
+	checkCLKernel(err);
         chipKernel.gpu_assign_ASE_kernel =
-            cl::Kernel(program, "gpu_assign_ASE_kernel");
+            cl::Kernel(program, "gpu_assign_ASE_kernel",&err);
+	checkCLKernel(err);
         chipKernel.gpu_assign_read_ASE_kernel =
-            cl::Kernel(program, "gpu_assign_read_ASE_kernel");
-        chipKernel.gpu_count_PSI = cl::Kernel(program, "gpu_count_PSI");
+            cl::Kernel(program, "gpu_assign_read_ASE_kernel",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_count_PSI = cl::Kernel(program, "gpu_count_PSI",&err);
+	checkCLKernel(err);
 
         return chipKernel;
 }

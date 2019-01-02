@@ -319,7 +319,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         boost::compute::vector<float> bc_tempTPM(numOfBin, bc_context);
         float bc_tpmCounter = 0.0f;
         boost::compute::reduce(bc_tempTPM.begin(), bc_tempTPM.end(),
-                               &bc_tpmCounter);
+                               &bc_tpmCounter,boost::compute::plus<float>(),bc_queue);
         queue.enqueueWriteBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
                                  &bc_tpmCounter);
         autoSetKernelArgs(allKernel.gpu_count_TPM, cl_d_bins.start_,
@@ -384,9 +384,28 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         queue.enqueueReadBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
                                 &tpmCounter);
 
-        std::cout << "free memory..." << std::endl;
-
+        queue.enqueueBarrierWithWaitList();
+	int32_t countIn, countOut;
+        UMAP::const_iterator gid, bin;
+        countIn = countOut = 0;
+        for (int i = 0; i < numOfASE; i++) {
+                if (h_ase_psi[i].countIn)
+                        countIn++;
+                if (h_ase_psi[i].countOut)
+                        countOut++;
+                gid = g_gid_map.find(h_ase_psi[i].gid_h);
+                bin = g_name_map.find(h_ase_psi[i].bin_h);
+                std::cout << gid->second << " "
+                          << ((bin == g_name_map.end()) ? "null" : bin->second)
+                          << " " << h_ase_psi[i].countIn << " "
+                          << h_ase_psi[i].countOut << " " << h_ase_psi[i].psi
+                          << std::endl;
+        }
+        std::cout << countIn << " " << countOut << std::endl;
+        // tpm
+        std::cout << "tpm count: " << tpmCounter << std::endl;
         // free memory
+        std::cout << "free memory..." << std::endl;
         delete[] h_ase_psi;
 }
 
