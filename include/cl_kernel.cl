@@ -130,7 +130,12 @@ typedef struct {
         float ciStart;
         float ciEnd;
 } ASEPsi;
-
+__kernel gather_kernel(__global int32_t *indices,__global read_core_t* d_cores_in,__global read_core_t* d_reads_core,uint64_t numOfRead){
+        int32_t threadId = get_group_id(0) * get_local_size(0) + get_local_id(0);
+        if (threadId < numOfRead){
+                d_reads_core[threadId] = d_cores_in[indices[threadId]];
+        }
+}
 void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
                            __global uint64_t *d_starts, int32_t numOfEntry,
                            __global Assist *d_assist)

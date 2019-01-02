@@ -297,6 +297,7 @@ env initCppCLSetup()
 /*hard code kernel name list*/
 struct kernelList {
         //cl::Kernel gpu_try_assign_kernel;
+        cl::Kernel gather_kernel;
         cl::Kernel gpu_assign_read_kernel;
         cl::Kernel gpu_count_tempTPM;
         cl::Kernel gpu_count_TPM;
@@ -322,6 +323,7 @@ std::vector<cl::Kernel> initCompileKernel(std::vector<cl::Device> devices,
         char buildCLFlag[] = "-cl-std=CL1.2 -Werror";
         program.build(devices, buildCLFlag);
 
+        cl::Kernel gather_kernel(program,"gather_kernel");
         cl::Kernel gpu_try_assign_kernel(program, "gpu_try_assign_kernel");
         cl::Kernel gpu_assign_read_kernel(program, "gpu_assign_read_kernel");
         cl::Kernel gpu_count_tempTPM(program, "gpu_count_tempTPM");
@@ -356,6 +358,8 @@ kernelList initCompileKernel_List(std::vector<cl::Device> devices,
 
         //chipKernel.gpu_try_assign_kernel =
         //   cl::Kernel(program, "gpu_try_assign_kernel");
+        chipKernel.gather_kernel=
+                cl::Kernel(program,"gather_kernel");
         chipKernel.gpu_assign_read_kernel =
             cl::Kernel(program, "gpu_assign_read_kernel");
         chipKernel.gpu_count_tempTPM = cl::Kernel(program, "gpu_count_tempTPM");
