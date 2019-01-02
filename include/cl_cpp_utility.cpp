@@ -244,6 +244,7 @@ void autoSetKernelArgs_(cl::Kernel kernel, int& order,const Arg1& arg1,const Arg
         //        kernel.setArg(i, std::forward<Args>(args)...);
         //}
 	kernel.setArg(order,arg1);
+  order = order+1;
 	autoSetKernelArgs_(kernel,order,args...);
 }
 template <class... Args>
