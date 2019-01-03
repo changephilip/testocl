@@ -3,13 +3,13 @@
 
 #define SE_ANCHOR
 #ifdef SE_ANCHOR
-const int anchorCount = 4;
-const int coordinateCount = 6;
+#define  anchorCount  4
+#define coordinateCount  6
 // serialization
 #else
 #ifdef RI_ANCHOR
-const int anchorCount = 2;
-const int coordinateCount = 4;
+constant int anchorCount = 2;
+constant int coordinateCount = 4;
 #endif
 #endif
 
@@ -19,34 +19,38 @@ typedef unsigned long long uint64_t;
 typedef signed int int32_t;
 typedef unsigned int uint32_t;
 // maximum field size
-const int nameSize = 24;
-const int gidSize = 96;
+constant int nameSize = 24;
+constant int gidSize = 96;
 
 #define SINGLE_END
 #ifdef SINGLE_END
-const int junctionSize = 5;
+#define junctionSize  5
 #elif defined(PAIR_END)
-const int junctionSize = 10;
+constant int junctionSize = 10;
 #endif
 
-const uint64_t refLength = (uint64_t)2 << 31;
-const uint64_t invalidLength = refLength << 5;
+constant uint64_t refLength = (uint64_t)2 << 31;
+constant uint64_t invalidLength = refLength << 5;
 
 // kernel parameters
-const int blockSize = 1024;
+constant int blockSize = 1024;
 
 // psi model
-const float step = 0.01;
-const int readLength = 100;
+constant float step = 0.01;
+constant int readLength = 100;
 
 typedef struct CL_ALIGNED(4) {
-        int32_t start_ = 0;
-        int32_t end_ = 0;
+        //int32_t start_ = 0;
+        //int32_t end_ = 0;
+        int32_t start_ ;
+        int32_t end_  ;
+
 } Junction, Anchor, Assist;
 
 struct CL_ALIGNED(8) read_core_t {
         // with junction
-        uint32_t junctionCount = 0;
+        //uint32_t junctionCount = 0;
+        uint32_t junctionCount ;
         Junction junctions[junctionSize];
 
         /*
@@ -80,7 +84,8 @@ typedef struct {
 
 struct CL_ALIGNED(32) ASECounter {
         Anchor artRange;
-        int32_t anchor[anchorCount] = {0};
+        //int32_t anchor[anchorCount] = {0};
+        int32_t anchor[anchorCount] ;
 
         /*
         __host__ __device__
@@ -92,9 +97,13 @@ struct CL_ALIGNED(32) ASECounter {
 
 struct CL_ALIGNED(32) bin_core_t {
 
-        int32_t name_h = 0;
-        uint32_t readCount = 0;
-        float tpmCount = 0.0;
+        //int32_t name_h = 0;
+        //uint32_t readCount = 0;
+        //float tpmCount = 0.0;
+        int32_t name_h ;
+        uint32_t readCount ;
+        float tpmCount ;
+
         // uint32_t aseCount;
 
         /*
@@ -109,8 +118,11 @@ struct CL_ALIGNED(32) bin_core_t {
 };
 
 struct ase_core_t {
-        int32_t gid_h = 0;
-        int32_t bin_h = 0;
+        //int32_t gid_h = 0;
+        //int32_t bin_h = 0;
+        int32_t gid_h ;
+        int32_t bin_h ;
+
         int32_t coordinates[coordinateCount];
         /*
     __host__ __device__
@@ -130,12 +142,14 @@ typedef struct {
         float ciStart;
         float ciEnd;
 } ASEPsi;
-__kernel gather_kernel(__global int32_t *indices,__global read_core_t* d_cores_in,__global read_core_t* d_reads_core,uint64_t numOfRead){
+__kernel void gather_kernel(__global int32_t *indices,__global struct read_core_t* d_cores_in,__global struct read_core_t* d_reads_core,uint64_t numOfRead)
+{
         int32_t threadId = get_group_id(0) * get_local_size(0) + get_local_id(0);
         if (threadId < numOfRead){
                 d_reads_core[threadId] = d_cores_in[indices[threadId]];
         }
 }
+
 void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
                            __global uint64_t *d_starts, int32_t numOfEntry,
                            __global Assist *d_assist)
@@ -154,7 +168,7 @@ void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
         if (left != numOfEntry)
                 d_assist[id].start_ = left;
         else {
-                d_assist[id].start_ = d_assist[id].ednd_ = 0;
+                d_assist[id].start_ = d_assist[id].end_ = 0;
                 return;
         }
         left = 0;
