@@ -16,7 +16,7 @@ else()
 endif()
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -D_FORCE_INLINES")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wpedantic -Wall")
 
 #set(GPU_ARCHITECTURE "sm_61" CACHE STRING "Target GPU architecture")
 
@@ -56,4 +56,6 @@ include_directories(
 
 #cuda_add_executable(paean ${CHIP_SOURCE_DIR}/src/gene.cu ${GFF_SRCS})
 add_executable(paean ${CHIP_SOURCE_DIR}/src/gene.cpp ${GFF_SRCS} )
+add_executable(tg ${CHIP_SOURCE_DIR}/src/tg.cpp ${GFF_SRCS} )
 target_link_libraries(paean ${HTSlib_LIBRARY} ${ZLIB_LIBRARIES} ${OPENCL_LIBRARIES} ${Boost_LIBRARIES} Threads::Threads)
+target_link_libraries(tg ${HTSlib_LIBRARY} ${ZLIB_LIBRARIES} ${OPENCL_LIBRARIES} ${Boost_LIBRARIES} Threads::Threads)

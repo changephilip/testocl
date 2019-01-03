@@ -462,6 +462,49 @@ kernelList initCompileKernel_List(std::vector<cl::Device> devices,
         return chipKernel;
 }
 
+kernelList initCompileKernel_ListG(std::vector<cl::Device> devices,
+                              cl::Context contexts,const char* kernelFileName)
+{
+        //std::ifstream programFile(programSource.c_str());
+	//std::ifstream programFile("/home/qianjiaqiang/testocl/include/cl_kernel.cl");
+	std::ifstream programFile(kernelFileName);
+        std::string programString(std::istreambuf_iterator<char>(programFile),
+                                  (std::istreambuf_iterator<char>()));
+        cl::Program::Sources source(
+            1,
+            std::make_pair(programString.c_str(), programString.length() + 1));
+        cl::Program program(contexts, source);
+        char buildCLFlag[] = " -Werror";
+        cl_int err=program.build(devices, buildCLFlag);
+	checkCLBuild(err);
+	std::cout << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << std::endl;
+	//exit(EXIT_FAILURE);
+        kernelList chipKernel;
+
+        //chipKernel.gpu_try_assign_kernel =
+        //   cl::Kernel(program, "gpu_try_assign_kernel");
+        chipKernel.gather_kernel=
+                cl::Kernel(program,"gather_kernel",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_assign_read_kernel =
+            cl::Kernel(program, "gpu_assign_read_kernel",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_count_tempTPM = cl::Kernel(program, "gpu_count_tempTPM",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_count_TPM = cl::Kernel(program, "gpu_count_TPM",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_assign_ASE_kernel =
+            cl::Kernel(program, "gpu_assign_ASE_kernel",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_assign_read_ASE_kernel =
+            cl::Kernel(program, "gpu_assign_read_ASE_kernel",&err);
+	checkCLKernel(err);
+        chipKernel.gpu_count_PSI = cl::Kernel(program, "gpu_count_PSI",&err);
+	checkCLKernel(err);
+
+        return chipKernel;
+}
+
 /*
 int main()
 {

@@ -13,7 +13,7 @@ constant int coordinateCount = 4;
 #endif
 #endif
 
-//#define CL_ALIGNED(_x) __attribute__((aligned(_x)))
+#define CL_ALIGNED(_x) __attribute__((aligned(_x)))
 typedef unsigned char uint8_t;
 typedef unsigned long long uint64_t;
 typedef int int32_t;
