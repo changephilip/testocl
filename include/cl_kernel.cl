@@ -29,14 +29,16 @@ constant int gidSize = 96;
 constant int junctionSize = 10;
 #endif
 
-constant uint64_t refLength = (uint64_t)2 << 31;
-constant uint64_t invalidLength = refLength << 5;
+//constant uint64_t refLength = (uint64_t)2 << 31;
+constant uint64_t refLength = 0x100000000;
+//constant uint64_t invalidLength = refLength << 5;
+constant uint64_t invalidLength = 0x2000000000 ;
 
 // kernel parameters
 constant int blockSize = 1024;
 
 // psi model
-constant float step = 0.01;
+constant float step_psi = 0.01;
 constant int readLength = 100;
 
 typedef struct CL_ALIGNED(4) {
@@ -190,10 +192,10 @@ void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
 
 __kernel void gpu_assign_read_kernel(
     __global uint64_t *d_bins_start_, __global uint64_t *d_bins_end_,
-    __global uint8_t *d_bins_strand, __global bin_core_t *d_bins_core,
+    __global uint8_t *d_bins_strand, __global struct bin_core_t *d_bins_core,
     int32_t numOfBin, __global uint64_t *d_reads_start_,
     __global uint64_t *d_reads_end_, __global uint8_t *d_reads_strand,
-    __global read_core_t *d_reads_core, int32_t numOfRead,
+    __global struct read_core_t *d_reads_core, int32_t numOfRead,
     __global Assist *d_assist)
 {
         int32_t binId = get_group_id(0) * get_local_size(0) + get_local_id(0);
@@ -218,14 +220,14 @@ __kernel void gpu_assign_read_kernel(
 __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
                                 __global uint64_t *d_bins_end_,
                                 __global uint8_t *d_bins_strand,
-                                __global bin_core_t *d_bins_core,
+                                __global struct bin_core_t *d_bins_core,
                                 int32_t numOfBin, __global float *d_tempTPM)
 {
         int32_t binId = get_group_id(0) * get_local_size(0) + get_local_id(0);
 
         if (binId < numOfBin) {
                 d_tempTPM[binId] =
-                    float(d_bins_core[binId], readCount) /
+                    float(d_bins_core[binId].readCount) /
                     float(d_bins_end_[binId] - d_bins_start_[binId]);
         }
 }
@@ -233,7 +235,7 @@ __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
 __kernel void gpu_count_TPM(__global uint64_t *d_bins_start_,
                             __global uint64_t *d_bins_end_,
                             __global uint8_t *d_bins_strand,
-                            __global bin_core_t *d_bins_core, int32_t numOfBin,
+                            __global struct bin_core_t *d_bins_core, int32_t numOfBin,
                             __global float *d_tempTPM,
                             __global float *d_tpmCounter)
 {
@@ -241,17 +243,17 @@ __kernel void gpu_count_TPM(__global uint64_t *d_bins_start_,
         if (binId < numOfBin) {
                 if (*d_tpmCounter == 0)
                         return;
-                d_bins_core[binId].tmpCount =
+                d_bins_core[binId].tpmCount =
                     1000000 * d_tempTPM[binId] / (*d_tpmCounter);
         }
 }
 
 __kernel void gpu_assign_ASE_kernel(
     __global uint64_t *d_bins_start_, __global uint64_t *d_bins_end_,
-    __global uint8_t *d_bins_strand, __global bin_core_t *d_bins_core,
+    __global uint8_t *d_bins_strand, __global struct bin_core_t *d_bins_core,
     int32_t numOfBin, __global uint64_t *d_ases_start_,
     __global uint64_t *d_ases_end_, __global uint8_t *d_ases_strand,
-    __global ase_core_t *d_ases_core, int32_t numOfASE,
+    __global struct ase_core_t *d_ases_core, int32_t numOfASE,
     __global Assist *d_assist)
 {
         int32_t binId = get_group_id(0) * get_local_size(0) + get_local_id(0);
@@ -274,16 +276,16 @@ __kernel void gpu_assign_ASE_kernel(
 
 __kernel void gpu_assign_read_ASE_kernel(
     __global uint64_t *d_ases_start_, __global uint64_t *d_ases_end_,
-    __global uint8_t *d_ases_strand, __global ase_core_t *d_ases_core,
-    int32_t numOfRead, __global uint64_t *d_reads_start_,
+    __global uint8_t *d_ases_strand, __global struct ase_core_t *d_ases_core,
+    int32_t numOfASE, __global uint64_t *d_reads_start_,
     __global uint64_t *d_reads_end_, __global uint8_t *d_reads_strand,
-    __global read_core_t *d_reads_core, __global Assist *d_assist,
-    __global ASECounter *ACT)
+    __global struct read_core_t *d_reads_core, int32_t numOfRead,__global Assist *d_assist,
+    __global struct ASECounter *ACT)
 {
         int32_t aseId = get_group_id(0) * get_local_size(0) + get_local_id(0);
         uint32_t read_strand, ase_strand, junctionCount;
         uint32_t read_s, read_e, junction_s, junction_e;
-        int32_t *coord;
+        global int32_t *coord;
 
         if (aseId < numOfASE) {
                 gpu_try_assign_kernel(d_ases_start_[aseId], d_ases_end_[aseId],
@@ -299,9 +301,9 @@ __kernel void gpu_assign_read_ASE_kernel(
                         read_strand = d_reads_strand[readId];
                         ase_strand = d_ases_strand[aseId];
                         if (read_strand == ase_strand) {
-                                read_s = uint32_t(d_reads_start_[readId] &
+                                read_s = (uint32_t)(d_reads_start_[readId] &
                                                   (refLength - 1));
-                                read_e = uint32_t(d_reads_end_[readId] &
+                                read_e = (uint32_t)(d_reads_end_[readId] &
                                                   (refLength - 1));
 #ifdef SE_ANCHOR
                                 junctionCount =
@@ -425,9 +427,9 @@ __kernel void gpu_assign_read_ASE_kernel(
 
         __global void gpu_count_PSI(
             __global uint64_t * d_ases_start_, __global uint64_t * d_ases_end_,
-            __global uint8_t * d_ases_strand, __global ase_core_t * d_ases_core,
+            __global uint8_t * d_ases_strand, __global struct ase_core_t * d_ases_core,
             int32_t numOfASE, __global ASEPsi * d_ase_psi,
-            __global ASECounter * ACT)
+            __global struct ASECounter * ACT)
         {
                 int32_t aseId =
                     get_group_id(0) * get_local_size(0) + get_local_id(0);

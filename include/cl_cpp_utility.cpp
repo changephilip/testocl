@@ -435,6 +435,7 @@ kernelList initCompileKernel_List(std::vector<cl::Device> devices,
         cl_int err=program.build(devices, buildCLFlag);
 	checkCLBuild(err);
 	std::cout << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << std::endl;
+	exit(EXIT_FAILURE);
         kernelList chipKernel;
 
         //chipKernel.gpu_try_assign_kernel =
