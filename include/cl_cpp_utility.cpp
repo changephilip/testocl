@@ -431,11 +431,11 @@ kernelList initCompileKernel_List(std::vector<cl::Device> devices,
             1,
             std::make_pair(programString.c_str(), programString.length() + 1));
         cl::Program program(contexts, source);
-        char buildCLFlag[] = "-cl-std=CL1.2 -Werror";
+        char buildCLFlag[] = " -Werror";
         cl_int err=program.build(devices, buildCLFlag);
 	checkCLBuild(err);
 	std::cout << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << std::endl;
-	exit(EXIT_FAILURE);
+	//exit(EXIT_FAILURE);
         kernelList chipKernel;
 
         //chipKernel.gpu_try_assign_kernel =
