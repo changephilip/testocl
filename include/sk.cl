@@ -190,8 +190,7 @@ void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
         else
             right = mid_l;
     }
-    if (left != numOfEntry)
-        d_assist[id].start_ = left;
+    if (left != numOfEntry) d_assist[id].start_ = left;
     else {
         d_assist[id].start_ = d_assist[id].end_ = 0;
         return;
