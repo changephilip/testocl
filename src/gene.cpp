@@ -23,13 +23,13 @@ struct cl_d_Reads {
         cl::Buffer core;
         cl_d_Reads(cl::Context &contexts, int32_t numOfRead)
         {
-                cl::Buffer start_(contexts, CL_MEM_READ_WRITE,
+                start_=cl::Buffer(contexts, CL_MEM_READ_WRITE,
                                   sizeof(uint64_t) * numOfRead, NULL);
-                cl::Buffer end_(contexts, CL_MEM_READ_WRITE,
+                end_=cl::Buffer(contexts, CL_MEM_READ_WRITE,
                                 sizeof(uint64_t) * numOfRead, NULL);
-                cl::Buffer strand(contexts, CL_MEM_READ_WRITE,
-                                  sizeof(uint64_t) * numOfRead, NULL);
-                cl::Buffer core(contexts, CL_MEM_READ_WRITE,
+                strand=cl::Buffer(contexts, CL_MEM_READ_WRITE,
+                                  sizeof(uint8_t) * numOfRead, NULL);
+                core=cl::Buffer(contexts, CL_MEM_READ_WRITE,
                                 sizeof(read_core_t) * numOfRead, NULL);
         }
 };
@@ -39,13 +39,13 @@ cl_d_Reads cl_chipMallocRead(cl::CommandQueue &queue, cl::Context &contexts,
         cl_d_Reads cl_d_reads(contexts, numOfRead);
         queue.enqueueWriteBuffer(cl_d_reads.start_, CL_FALSE, 0,
                                  sizeof(uint64_t) * numOfRead,
-                                 h_reads.start_.data());
+                                 &(h_reads.start_[0]));
         queue.enqueueWriteBuffer(cl_d_reads.end_, CL_FALSE, 0,
                                  sizeof(uint64_t) * numOfRead,
-                                 h_reads.end_.data());
+                                 &(h_reads.end_[0]));
         queue.enqueueWriteBuffer(cl_d_reads.strand, CL_FALSE, 0,
                                  sizeof(uint8_t) * numOfRead,
-                                 h_reads.strand.data());
+                                 &(h_reads.strand[0]));
         /*
         queue.enqueueWriteBuffer(cl_d_reads.core, CL_FALSE, 0,
                                  sizeof(read_core_t) * numOfRead,
@@ -63,13 +63,13 @@ struct cl_d_Bins {
 
         cl_d_Bins(cl::Context &contexts, int32_t numOfBin)
         {
-                cl::Buffer start_(contexts, CL_MEM_READ_WRITE,
+                 start_=cl::Buffer(contexts, CL_MEM_READ_WRITE,
                                   sizeof(uint64_t) * numOfBin, NULL);
-                cl::Buffer end_(contexts, CL_MEM_READ_WRITE,
+                 end_=cl::Buffer(contexts, CL_MEM_READ_WRITE,
                                 sizeof(uint64_t) * numOfBin, NULL);
-                cl::Buffer strand(contexts, CL_MEM_READ_WRITE,
-                                  sizeof(uint64_t) * numOfBin, NULL);
-                cl::Buffer core(contexts, CL_MEM_READ_WRITE,
+                 strand=cl::Buffer(contexts, CL_MEM_READ_WRITE,
+                                  sizeof(uint8_t) * numOfBin, NULL);
+                 core=cl::Buffer(contexts, CL_MEM_READ_WRITE,
                                 sizeof(bin_core_t) * numOfBin, NULL);
         }
 };
@@ -80,16 +80,16 @@ cl_d_Bins cl_chipMallocBin(cl::CommandQueue &queue, cl::Context &contexts,
         cl_d_Bins cl_d_bins(contexts, numOfBin);
         queue.enqueueWriteBuffer(cl_d_bins.start_, CL_FALSE, 0,
                                  sizeof(uint64_t) * numOfBin,
-                                 h_bins.start_.data());
+                                 &(h_bins.start_[0]));
         queue.enqueueWriteBuffer(cl_d_bins.end_, CL_FALSE, 0,
                                  sizeof(uint64_t) * numOfBin,
-                                 h_bins.end_.data());
+                                 &(h_bins.end_[0]));
         queue.enqueueWriteBuffer(cl_d_bins.strand, CL_FALSE, 0,
                                  sizeof(uint8_t) * numOfBin,
-                                 h_bins.strand.data());
+                                 &(h_bins.strand[0]));
         queue.enqueueWriteBuffer(cl_d_bins.core, CL_FALSE, 0,
                                  sizeof(bin_core_t) * numOfBin,
-                                 h_bins.core.data());
+                                 &(h_bins.core[0]));
         return cl_d_bins;
 }
 struct cl_d_ASEs {
@@ -101,14 +101,18 @@ struct cl_d_ASEs {
 
         cl_d_ASEs(cl::Context &contexts, int32_t numOfASE)
         {
-                cl::Buffer start_(contexts, CL_MEM_READ_WRITE,
-                                  sizeof(uint64_t) * numOfASE, NULL);
-                cl::Buffer end_(contexts, CL_MEM_READ_WRITE,
-                                sizeof(uint64_t) * numOfASE, NULL);
-                cl::Buffer strand(contexts, CL_MEM_READ_WRITE,
-                                  sizeof(uint64_t) * numOfASE, NULL);
-                cl::Buffer core(contexts, CL_MEM_READ_WRITE,
-                                sizeof(ase_core_t) * numOfASE, NULL);
+		cl_int err;
+                 start_=cl::Buffer(contexts, CL_MEM_READ_WRITE,
+                                  sizeof(uint64_t) * numOfASE,NULL, &err);
+		checkCLBuffer(err,__LINE__);
+                 end_=cl::Buffer(contexts, CL_MEM_READ_WRITE,
+                                sizeof(uint64_t) * numOfASE,NULL, &err);
+		checkCLBuffer(err,__LINE__);
+                 strand=cl::Buffer(contexts, CL_MEM_READ_WRITE,
+                                  sizeof(uint8_t) * numOfASE,NULL, &err);
+		checkCLBuffer(err,__LINE__);
+                 core=cl::Buffer(contexts, CL_MEM_READ_WRITE,
+                                sizeof(ase_core_t) * numOfASE,NULL, &err);
         }
 };
 
@@ -116,18 +120,20 @@ cl_d_ASEs cl_chipMallocASE(cl::CommandQueue &queue, cl::Context &contexts,
                            h_ASEs &h_ases, int32_t numOfASE)
 {
         cl_d_ASEs cl_d_ases(contexts, numOfASE);
-        queue.enqueueWriteBuffer(cl_d_ases.start_, CL_FALSE, 0,
+	cl_int err;
+        err = queue.enqueueWriteBuffer(cl_d_ases.start_, CL_FALSE, 0,
                                  sizeof(uint64_t) * numOfASE,
-                                 h_ases.start_.data());
+                                 &(h_ases.start_[0]));
+	checkCLIOBuffer(err,__LINE__);
         queue.enqueueWriteBuffer(cl_d_ases.end_, CL_FALSE, 0,
                                  sizeof(uint64_t) * numOfASE,
-                                 h_ases.end_.data());
+                                 &(h_ases.end_[0]));
         queue.enqueueWriteBuffer(cl_d_ases.strand, CL_FALSE, 0,
                                  sizeof(uint8_t) * numOfASE,
-                                 h_ases.strand.data());
+                                 &(h_ases.strand[0]));
         queue.enqueueWriteBuffer(cl_d_ases.core, CL_FALSE, 0,
                                  sizeof(ase_core_t) * numOfASE,
-                                 h_ases.core.data());
+                                 &(h_ases.core[0]));
         return cl_d_ases;
 }
 
@@ -230,6 +236,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         /* Start CL setup*/
         // cl::Contexts contexts = initCppCLSetup();
         env CLEnv = initCppCLSetup();
+	cl_int err;
         cl::CommandQueue queue(CLEnv.context, CLEnv.selectedDevices[0], 0,
                                NULL);
         /* import CL kernel first*/
@@ -242,7 +249,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         cl::Buffer cl_assist_reads(CLEnv.context, CL_MEM_READ_WRITE,
                                    sizeof(Assist) * numOfRead, NULL);
         cl::NDRange offset(0, 0);
-        cl::NDRange global_size(numOfBin, 1);
+        cl::NDRange global_size(nBlock*blockSize, 1);
         cl::NDRange local_size(blockSize, 1);
 
         // allocate memory on gpu
@@ -256,7 +263,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         // copy and gather bc_d_cores
         // first transfer indices to host
         std::vector<int> h_indices(numOfRead);
-        boost::compute::copy(h_indices.begin(),h_indices.end(),d_indices.begin(),bc_queue);
+        boost::compute::copy(d_indices.begin(),d_indices.end(),h_indices.begin(),bc_queue);
         int32_t *indices;
         indices = new int32_t[numOfRead];
         for (int32_t i = 0; i < numOfRead; ++i) {
@@ -264,7 +271,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         }
         // allocate cl_d_indices, cores_in on device and h_core on host
         cl::Buffer cl_d_indices(CLEnv.context, CL_MEM_READ_WRITE,
-                                sizeof(uint64_t) * numOfRead, indices);
+                                sizeof(int32_t) * numOfRead, NULL);
         cl::Buffer cl_d_cores_in(CLEnv.context, CL_MEM_READ_WRITE,
                               sizeof(read_core_t) * numOfRead, NULL);
         read_core_t * h_core;
@@ -273,13 +280,17 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                 h_core[i] = h_reads.core[i];
         }
 
-        queue.enqueueWriteBuffer(cl_d_indices, CL_TRUE, 0, sizeof(int)*numOfRead,indices );
-        queue.enqueueWriteBuffer(cl_d_cores_in,CL_TRUE,0,sizeof(read_core_t)*numOfRead,h_core);
+	queue.finish();
+        err = queue.enqueueWriteBuffer(cl_d_indices, CL_TRUE, 0, sizeof(int32_t)*numOfRead,indices );
+	checkCLIOBuffer(err,__LINE__);
+        err = queue.enqueueWriteBuffer(cl_d_cores_in,CL_TRUE,0,sizeof(read_core_t)*numOfRead,h_core);
+	checkCLIOBuffer(err,__LINE__);
         //cl::Buffer bc_d_cores(CLEnv.context,CL_MEM_READ_WRITE,sizeof(read_core_t)*numOfRead,NULL);
         //gather cores and tranfer to cl_d_reads.core
-        autoSetKernelArgs(allKernel.gather_kernel, cl_d_indices,cl_d_cores_in,cl_d_reads.core,numOfRead);
-        queue.enqueueNDRangeKernel(allKernel.gather_kernel, offset, global_size, local_size);
-        queue.enqueueBarrierWithWaitList();
+        autoSetKernelArgs(allKernel.gather_kernel, cl_d_indices,cl_d_cores_in,cl_d_reads.core,(uint64_t)numOfRead);
+        err = queue.enqueueNDRangeKernel(allKernel.gather_kernel, offset, global_size, local_size);
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
         delete[] indices;
         delete[] h_core;
         // assign reads to bins
@@ -290,26 +301,28 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                           numOfBin, cl_d_reads.start_, cl_d_reads.end_,
                           cl_d_reads.strand, cl_d_reads.core, numOfRead,
                           cl_assist_reads);
-        queue.enqueueNDRangeKernel(allKernel.gpu_assign_read_kernel, offset,
+        err = queue.enqueueNDRangeKernel(allKernel.gpu_assign_read_kernel, offset,
                                    global_size, local_size);
-        queue.enqueueBarrierWithWaitList();
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
 
         int32_t tpmSize = (nextPow2(nBlock) + 1) / 2;
         cl::Buffer d_tempTPM(CLEnv.context, CL_MEM_READ_WRITE,
                              sizeof(float) * numOfBin, NULL);
         cl::Buffer d_tpmCounter(CLEnv.context, CL_MEM_READ_WRITE,
                                 sizeof(float) * tpmSize, NULL);
-        queue.enqueueFillBuffer(d_tempTPM, 0, 0, numOfBin);
-        queue.enqueueFillBuffer(d_tpmCounter, 0, 0, tpmSize);
+        queue.enqueueFillBuffer(d_tempTPM, 0, 0, numOfBin*sizeof(float));
+        queue.enqueueFillBuffer(d_tpmCounter, 0, 0, tpmSize*sizeof(float));
 
         std::cout << "starting count tpm..." << std::endl;
         /*DONE CL:count tempTPM,reduce singlePass,countTPM*/
         autoSetKernelArgs(allKernel.gpu_count_tempTPM, cl_d_bins.start_,
                           cl_d_bins.end_, cl_d_bins.strand, cl_d_bins.core,
                           numOfBin, d_tempTPM);
-        queue.enqueueNDRangeKernel(allKernel.gpu_count_tempTPM, offset,
+        err = queue.enqueueNDRangeKernel(allKernel.gpu_count_tempTPM, offset,
                                    global_size, local_size);
-        queue.enqueueBarrierWithWaitList();
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
         // autoSetKernelArgs(allKernel.gpu_block_reduce, blockSize, d_tempTPM,
         //                         d_tpmCounter);
 
@@ -325,9 +338,10 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         autoSetKernelArgs(allKernel.gpu_count_TPM, cl_d_bins.start_,
                           cl_d_bins.end_, cl_d_bins.strand, cl_d_bins.core,
                           numOfBin, d_tempTPM, d_tpmCounter);
-        queue.enqueueNDRangeKernel(allKernel.gpu_count_TPM, offset, global_size,
+        err = queue.enqueueNDRangeKernel(allKernel.gpu_count_TPM, offset, global_size,
                                    local_size);
-        queue.enqueueBarrierWithWaitList();
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
 
         // auxiliary array
         cl::Buffer d_assist_ases(CLEnv.context, CL_MEM_READ_WRITE,
@@ -340,9 +354,10 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                           numOfBin, cl_d_ases.start_, cl_d_ases.end_,
                           cl_d_ases.strand, cl_d_ases.core, numOfASE,
                           d_assist_ases);
-        queue.enqueueNDRangeKernel(allKernel.gpu_assign_ASE_kernel, offset,
+        err = queue.enqueueNDRangeKernel(allKernel.gpu_assign_ASE_kernel, offset,
                                    global_size, local_size);
-        queue.enqueueBarrierWithWaitList();
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
 
         // auxiliary array
         cl::Buffer d_assist_read_ases(CLEnv.context, CL_MEM_READ_WRITE,
@@ -352,7 +367,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
 
         // compute number of thread block
         nBlock = (unsigned(numOfASE) + blockSize - 1) / blockSize;
-        cl::NDRange global_size_ASE(nBlock, 1);
+        cl::NDRange global_size_ASE(nBlock*blockSize, 1);
         // assign reads to ases
         /*TODO CL:gpu assign read ASE*/
         autoSetKernelArgs(allKernel.gpu_assign_read_ASE_kernel,
@@ -360,9 +375,10 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                           cl_d_ases.core, numOfASE, cl_d_reads.start_,
                           cl_d_reads.end_, cl_d_reads.strand, cl_d_reads.core,
                           numOfRead, d_assist_read_ases, ACT);
-        queue.enqueueNDRangeKernel(allKernel.gpu_assign_read_ASE_kernel, offset,
+        err = queue.enqueueNDRangeKernel(allKernel.gpu_assign_read_ASE_kernel, offset,
                                    global_size_ASE, local_size);
-        queue.enqueueBarrierWithWaitList();
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
         // count psi
         /*DONE CL: count PSI*/
         size_t psiSize = sizeof(ASEPsi) * numOfASE;
@@ -373,9 +389,10 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                           cl_d_ases.end_, cl_d_ases.strand, cl_d_ases.core,
                           numOfASE, d_ase_psi, ACT);
 
-        queue.enqueueNDRangeKernel(allKernel.gpu_count_PSI, offset,
+        err = queue.enqueueNDRangeKernel(allKernel.gpu_count_PSI, offset,
                                    global_size_ASE, local_size);
-        queue.enqueueBarrierWithWaitList();
+	checkCLEnqueue(err,__LINE__);
+	queue.finish();
 
         ASEPsi *h_ase_psi = new ASEPsi[numOfASE];
 
@@ -384,7 +401,7 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         queue.enqueueReadBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
                                 &tpmCounter);
 
-        queue.enqueueBarrierWithWaitList();
+	queue.finish();
 	int32_t countIn, countOut;
         UMAP::const_iterator gid, bin;
         countIn = countOut = 0;

@@ -69,7 +69,7 @@ const int blockSize = 1024;
 const float step = 0.01;
 const int readLength = 100;
 
-typedef struct {
+typedef struct  {
     int32_t start_;
     int32_t end_;
 } Junction, Anchor, Assist;
@@ -120,7 +120,7 @@ typedef struct {
     JunctionTag tag;
 } ASERelated;
 
-struct ALIGN(32) ASECounter {
+typedef struct  ASECounter {
     Anchor artRange;
     int32_t anchor[anchorCount];
 
@@ -129,7 +129,7 @@ struct ALIGN(32) ASECounter {
     }
 };
 
-struct ALIGN(32) bin_core_t {
+struct  bin_core_t {
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)

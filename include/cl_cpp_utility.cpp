@@ -419,12 +419,116 @@ inline void checkCLKernel(cl_int &err){
 		}
 	}
 }
+void checkCLEnqueue(cl_int &err, int32_t lineNumber){
+	if (err != CL_SUCCESS){
+		printf("Kernel Enqueue Fail %d\n",lineNumber);
+		if (err == CL_INVALID_PROGRAM_EXECUTABLE){
+			printf("CL_INVALID_PROGRAM_EXECUTABLE\n");
+		}
+		if (err == CL_INVALID_KERNEL){
+			printf("CL_INVALID_KERNEL\n");
+		}
+		if (err == CL_INVALID_CONTEXT){
+			printf("CL_INVALID_CONTEXT\n");
+		}
+		if (err == CL_INVALID_KERNEL_ARGS){
+			printf("CL_INVALID_KERNEL_ARGS\n");
+		}
+		if (err == CL_INVALID_GLOBAL_WORK_SIZE){
+			printf("CL_INVALID_GLOBAL_WORK_SIZE\n");
+		}
+		if (err == CL_INVALID_GLOBAL_OFFSET){
+			printf("CL_INVALID_GLOBAL_OFFSET\n");
+		}
+		if (err == CL_INVALID_WORK_GROUP_SIZE){
+			printf("CL_INVALID_WORK_GROUP_SIZE\n");
+		}
+		if (err == CL_INVALID_WORK_ITEM_SIZE){
+			printf("CL_INVALID_WORK_ITEM_SIZE\n");
+		}
+		if (err == CL_MISALIGNED_SUB_BUFFER_OFFSET){
+			printf("CL_MISALIGNED_SUB_BUFFER_OFFSET\n");
+		}
+		if (err == CL_INVALID_IMAGE_SIZE){
+			printf("CL_INVALID_IMAGE_SIZE\n");
+		}	
+		if (err == CL_OUT_OF_RESOURCES){
+			printf("CL_OUT_OF_RESOURCES\n");
+		}
+		if (err == CL_MEM_OBJECT_ALLOCATION_FAILURE){
+			printf("CL_MEM_OBJECT_ALLOCATION_FAILURE\n");
+		}
+		if (err == CL_INVALID_EVENT_WAIT_LIST){
+			printf("CL_INVALID_EVENT_WAIT_LIST\n");
+		}
+		if (err == CL_OUT_OF_HOST_MEMORY){
+			printf("CL_OUT_OF_HOST_MEMORY\n");
+		}
+	}
+}
+
+void checkCLBuffer(cl_int &err,int lineNumber){
+	if (err != CL_SUCCESS){
+		printf("Buffer Failed %d\n",lineNumber);
+		if (err == CL_INVALID_CONTEXT){
+			printf("CL_INVALID_CONTEXT\n");
+		}
+		if (err == CL_INVALID_VALUE){
+			printf("CL_INVALID_VALUE\n");
+		}
+		if (err == CL_INVALID_BUFFER_SIZE){
+			printf("CL_INVALID_BUFFER_SIZE\n");
+		}
+		if (err == CL_INVALID_HOST_PTR){
+			printf("CL_INVALID_HOST_PTR\n");
+		}
+		if (err == CL_MEM_OBJECT_ALLOCATION_FAILURE){
+			printf("CL_MEM_OBJECT_ALLOCATION_FAILURE\n");
+		}
+		if (err == CL_OUT_OF_RESOURCES){
+			printf("CL_OUT_OF_RESOURCES\n");
+		}
+		if (err == CL_OUT_OF_HOST_MEMORY){
+			printf("CL_OUT_OF_HOST_MEMORY\n");
+		}
+	}
+}
+
+void checkCLIOBuffer(cl_int &err,int lineNumber){
+	if (err != CL_SUCCESS){
+		printf("CL Read Or Write Buffer Failed %d\n",lineNumber);
+		if (err == CL_INVALID_CONTEXT){
+			printf("CL_INVALID_CONTEXT\n");
+		}
+		if (err == CL_INVALID_MEM_OBJECT){
+			printf("CL_INVALID_MEM_OBJECT\n");
+		}
+		if (err == CL_INVALID_VALUE){
+			printf("CL_INVALID_VALUE\n");
+		}
+		if (err == CL_INVALID_EVENT_WAIT_LIST){
+			printf("CL_INVALID_EVENT_WAIT_LIST\n");
+		}
+		if (err == CL_MISALIGNED_SUB_BUFFER_OFFSET){
+			printf("CL_MISALIGNED_SUB_BUFFER_OFFSET\n");
+		}
+		if (err == CL_MEM_OBJECT_ALLOCATION_FAILURE){
+			printf("CL_MEM_OBJECT_ALLOCATION_FAILURE\n");
+		}
+		if (err == CL_OUT_OF_RESOURCES){
+			printf("CL_OUT_OF_RESOURCES\n");
+		}
+		if (err == CL_OUT_OF_HOST_MEMORY){
+			printf("CL_OUT_OF_HOST_MEMORY\n");
+		}	
+	}
+}
 /*compile kernels and return*/
 kernelList initCompileKernel_List(std::vector<cl::Device> devices,
                               cl::Context contexts)
 {
         //std::ifstream programFile(programSource.c_str());
-	std::ifstream programFile("/home/qianjiaqiang/testocl/include/cl_kernel.cl");
+	std::ifstream programFile("/home/qianjiaqiang/testocl/include/sk.cl");
         std::string programString(std::istreambuf_iterator<char>(programFile),
                                   (std::istreambuf_iterator<char>()));
         cl::Program::Sources source(

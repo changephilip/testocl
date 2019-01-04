@@ -8,31 +8,31 @@
 // serialization
 #else
 #ifdef RI_ANCHOR
-constant int anchorCount = 2;
-constant int coordinateCount = 4;
+#define anchorCount 2
+#define coordinateCount 4
 #endif
 #endif
 
 #define CL_ALIGNED(_x) __attribute__((aligned(_x)))
-typedef unsigned char uint8_t;
-typedef unsigned long long uint64_t;
+typedef uchar uint8_t;
+typedef ulong uint64_t;
 typedef int int32_t;
-typedef unsigned int uint32_t;
+typedef uint uint32_t;
 // maximum field size
-constant int nameSize = 24;
-constant int gidSize = 96;
+#define nameSize  24
+#define gidSize  96
 
 #define SINGLE_END
 #ifdef SINGLE_END
 #define junctionSize 5
 #elif defined(PAIR_END)
-constant int junctionSize = 10;
+#define junctionSize 10
 #endif
 
 // constant uint64_t refLength = (uint64_t)2 << 31;
 constant uint64_t refLength = 0x100000000;
 // constant uint64_t invalidLength = refLength << 5;
-constant uint64_t invalidLength = 0x2000000000;
+constant uint64_t invalidLength = 0x2000000000U;
 
 // kernel parameters
 constant int blockSize = 1024;
@@ -41,7 +41,7 @@ constant int blockSize = 1024;
 constant float step_psi = 0.01;
 constant int readLength = 100;
 
-typedef struct CL_ALIGNED(4) {
+typedef struct  {
     // int32_t start_ = 0;
     // int32_t end_ = 0;
     int32_t start_;
@@ -49,7 +49,7 @@ typedef struct CL_ALIGNED(4) {
 
 } Junction, Anchor, Assist;
 
-typedef struct CL_ALIGNED(8)  {
+typedef struct  {
     // with junction
     // uint32_t junctionCount = 0;
     uint32_t junctionCount;
@@ -84,7 +84,7 @@ typedef struct {
     JunctionTag tag;
 } ASERelated;
 
-typedef struct CL_ALIGNED(32)  {
+typedef struct  {
     Anchor artRange;
     // int32_t anchor[anchorCount] = {0};
     int32_t anchor[anchorCount];
@@ -97,7 +97,7 @@ typedef struct CL_ALIGNED(32)  {
     */
 }ASECounter;
 
-typedef struct CL_ALIGNED(32) {
+typedef struct  {
     // int32_t name_h = 0;
     // uint32_t readCount = 0;
     // float tpmCount = 0.0;
@@ -153,9 +153,26 @@ __kernel void gather_kernel(__global int32_t *indices,
                             uint64_t numOfRead)
 {
     int32_t threadId = get_group_id(0) * get_local_size(0) + get_local_id(0);
+    //read_core_t tmp;
     if (threadId < numOfRead) {
-        d_reads_core[threadId] = d_cores_in[indices[threadId]];
-    }
+    	int32_t targetId = indices[threadId];
+	//tmp.junctionCount = d_cores_in[targetId].junctionCount;
+	//tmp = d_c
+        d_reads_core[threadId] = d_cores_in[targetId];
+	/*
+	d_reads_core[threadId].junctionCount = d_cores_in[targetId].junctionCount;
+	d_reads_core[threadId].junctions[0].start_ = d_cores_in[targetId].junctions[0].start_;
+	d_reads_core[threadId].junctions[0].end_ = d_cores_in[targetId].junctions[0].end_;
+	d_reads_core[threadId].junctions[1].start_ = d_cores_in[targetId].junctions[1].start_;
+	d_reads_core[threadId].junctions[1].end_ = d_cores_in[targetId].junctions[1].end_;
+	d_reads_core[threadId].junctions[2].start_ = d_cores_in[targetId].junctions[2].start_;
+	d_reads_core[threadId].junctions[2].end_ = d_cores_in[targetId].junctions[2].end_;
+	d_reads_core[threadId].junctions[3].start_ = d_cores_in[targetId].junctions[3].start_;
+	d_reads_core[threadId].junctions[3].end_ = d_cores_in[targetId].junctions[3].end_;
+	d_reads_core[threadId].junctions[4].start_ = d_cores_in[targetId].junctions[4].start_;
+	d_reads_core[threadId].junctions[4].end_ = d_cores_in[targetId].junctions[4].end_;
+	*/
+   }
 }
 
 void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
@@ -209,7 +226,7 @@ __kernel void gpu_assign_read_kernel(
     if (binId < numOfBin) {
         gpu_try_assign_kernel(d_bins_start_[binId], d_bins_end_[binId], binId,
                               d_reads_start_, numOfRead, d_assist);
-    };
+    
     mem_fence(CLK_GLOBAL_MEM_FENCE);
 
     for (int readId = d_assist[binId].start_; readId < d_assist[binId].end_;
@@ -221,7 +238,7 @@ __kernel void gpu_assign_read_kernel(
     d_bins_core[binId].readCount =
         d_assist[binId].end_ - d_assist[binId].start_ - temp;
 }
-
+}
 __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
                                 __global uint64_t *d_bins_end_,
                                 __global uint8_t *d_bins_strand,
@@ -420,4 +437,5 @@ __kernel void gpu_count_PSI(__global uint64_t *d_ases_start_,
         mem_fence(CLK_GLOBAL_MEM_FENCE);
     }
 }
+
 #endif
