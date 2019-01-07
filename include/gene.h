@@ -1,6 +1,7 @@
 #ifndef _CHIP_HEADER_H_
 #define _CHIP_HEADER_H_
 
+#define CL_TARGET_OPENCL_VERSION 120
 #include <vector>
 #include <string>
 #include <cmath>
