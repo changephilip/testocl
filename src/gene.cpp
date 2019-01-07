@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include "cl_cpp_utility.cpp"
 #include "parse.h"
+#include <numeric>
 BOOST_COMPUTE_ADAPT_STRUCT(Junction, Junction, (start_, end_))
 BOOST_COMPUTE_ADAPT_STRUCT(read_core_t, read_core_t, (junctionCount, junctions))
 int32_t nextPow2(int32_t x)
@@ -46,12 +47,36 @@ cl_d_Reads cl_chipMallocRead(cl::CommandQueue &queue, cl::Context &contexts,
     queue.enqueueWriteBuffer(cl_d_reads.strand, CL_TRUE, 0,
                              sizeof(uint8_t) * numOfRead, &(h_reads.strand[0]));
     
-    
+    read_core_t fillCore;
+    fillCore.junctionCount=0;
+    for (int i=0;i<junctionSize;i++){
+	fillCore.junctions[i].start_=0;
+	fillCore.junctions[i].end_=0;
+	}
+    cl_int err = queue.enqueueFillBuffer(cl_d_reads.core, &fillCore, 0,
+                                  numOfRead * sizeof(read_core_t));
+	/*
     queue.enqueueWriteBuffer(cl_d_reads.core, CL_TRUE, 0,
                              sizeof(read_core_t) * numOfRead,
-                             h_reads.core.data());
-    
+                             &(h_reads.core[0]));
+   */ 
     return cl_d_reads;
+}
+
+void testcp(cl::CommandQueue &queue,cl::Context &contexts){
+	std::vector<int> a(5000);
+	std::iota(a.begin(),a.end(),0);
+	std::vector<int> b(5000);
+	cl::Buffer test(contexts,CL_MEM_READ_WRITE,sizeof(int)*5000,NULL);
+	queue.enqueueWriteBuffer(test,CL_TRUE,0,sizeof(int)*5000,&(a[0]));
+	queue.enqueueReadBuffer(test,CL_TRUE,0,sizeof(int)*5000,&(b[0]));
+	for(int i = 0;i<5000;i++){
+		if(a[i]!=b[i]){
+			printf("Error cp!\n");
+			exit(EXIT_FAILURE);
+		}
+
+	}
 }
 
 struct cl_d_Bins {
@@ -228,6 +253,7 @@ gather,and then reuse cl_chipMalloc to memcpy.
     env CLEnv = initCppCLSetup();
     cl_int err;
     cl::CommandQueue queue(CLEnv.context, CLEnv.selectedDevices[0], 0, NULL);
+    testcp(queue,CLEnv.context);
     /* import CL kernel first*/
     std::string kernelFileName = "";
     // kernelList allKernel = initCompileKernel_List(
@@ -237,6 +263,10 @@ gather,and then reuse cl_chipMalloc to memcpy.
 
     cl::Buffer cl_assist_reads(CLEnv.context, CL_MEM_READ_WRITE,
                                sizeof(Assist) * numOfBin, NULL, &err);
+    Assist fillAssist;
+    fillAssist.start_=0;
+    fillAssist.end_ =0 ;
+    err = queue.enqueueFillBuffer(cl_assist_reads,&fillAssist,0,numOfBin*sizeof(Assist));
     checkCLBuffer(err, __LINE__);
     cl::NDRange offset(0, 0);
     cl::NDRange global_size(nBlock * blockSize, 1);
@@ -281,7 +311,20 @@ gather,and then reuse cl_chipMalloc to memcpy.
     err = queue.enqueueNDRangeKernel(allKernel.gather_kernel, offset,
                                      global_size, local_size);
     checkCLEnqueue(err, __LINE__);
+/*
     queue.finish();
+	{
+	std::vector<read_core_t> recieve(numOfRead);
+	queue.enqueueReadBuffer(cl_d_reads.core,CL_TRUE,0,sizeof(read_core_t)*numOfRead,&(recieve[0]));
+	std::vector<read_core_t> recieve_t(numOfRead);
+	for (int i = 0;i<numOfRead;i++){
+		recieve_t[i] = h_reads.core[indices[i];
+		
+	}
+
+	
+}
+*/
     delete[] indices;
     // assign reads to bins
     std::cout << "starting assign reads..." << std::endl;
@@ -332,7 +375,7 @@ gather,and then reuse cl_chipMalloc to memcpy.
     queue.enqueueReadBuffer(d_tempTPM, CL_TRUE, 0, sizeof(float) * numOfBin,
                             h_tempTPM);
     queue.finish();
-    boost::compute::copy(bc_tempTPM.begin(), bc_tempTPM.end(), h_tempTPM,
+    boost::compute::copy(h_tempTPM,h_tempTPM+numOfBin,bc_tempTPM.begin(),
                          bc_queue);
     bc_queue.finish();
     delete[] h_tempTPM;
@@ -340,7 +383,8 @@ gather,and then reuse cl_chipMalloc to memcpy.
     boost::compute::reduce(bc_tempTPM.begin(), bc_tempTPM.end(), &bc_tpmCounter,
                            boost::compute::plus<float>(), bc_queue);
     bc_queue.finish();
-    queue.enqueueReadBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
+    printf("bc_tpmCounter %f\n",bc_tpmCounter);
+    queue.enqueueWriteBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
                             &bc_tpmCounter);
     autoSetKernelArgs(allKernel.gpu_count_TPM, cl_d_bins.start_, cl_d_bins.end_,
                       cl_d_bins.strand, cl_d_bins.core, numOfBin, d_tempTPM,
