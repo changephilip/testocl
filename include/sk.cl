@@ -226,17 +226,17 @@ __kernel void gpu_assign_read_kernel(
         gpu_try_assign_kernel(d_bins_start_[binId], d_bins_end_[binId], binId,
                               d_reads_start_, numOfRead, d_assist);
     
-    mem_fence(CLK_GLOBAL_MEM_FENCE);
+    	mem_fence(CLK_GLOBAL_MEM_FENCE);
 
-    for (int readId = d_assist[binId].start_; readId < d_assist[binId].end_;
+    	for (int readId = d_assist[binId].start_; readId < d_assist[binId].end_;
          readId++) {
-        if ((d_reads_strand[readId] != d_bins_strand[binId]) ||
-            (d_reads_end_[readId] > d_bins_end_[binId]))
-            temp++;
-    }
-    d_bins_core[binId].readCount =
-        d_assist[binId].end_ - d_assist[binId].start_ - temp;
-}
+        	if ((d_reads_strand[readId] != d_bins_strand[binId]) ||
+            		(d_reads_end_[readId] > d_bins_end_[binId]))
+            		temp++;
+    		}
+    		d_bins_core[binId].readCount =
+        	d_assist[binId].end_ - d_assist[binId].start_ - temp;
+	}
 }
 __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
                                 __global uint64_t *d_bins_end_,
@@ -280,7 +280,7 @@ __kernel void gpu_assign_ASE_kernel(
         gpu_try_assign_kernel(d_bins_start_[binId], d_bins_end_[binId], binId,
                               d_ases_start_, numOfASE, d_assist);
         mem_fence(CLK_GLOBAL_MEM_FENCE);
-    }
+    
 
     for (int32_t aseId = d_assist[binId].start_; aseId < d_assist[binId].end_;
          aseId++) {
@@ -290,6 +290,7 @@ __kernel void gpu_assign_ASE_kernel(
         } else {
             d_ases_core[aseId].bin_h = 0;
         }
+	}
     }
 }
 

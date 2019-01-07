@@ -37,20 +37,20 @@ cl_d_Reads cl_chipMallocRead(cl::CommandQueue &queue, cl::Context &contexts,
                              h_Reads &h_reads, int32_t numOfRead)
 {
         cl_d_Reads cl_d_reads(contexts, numOfRead);
-        queue.enqueueWriteBuffer(cl_d_reads.start_, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_reads.start_, CL_TRUE, 0,
                                  sizeof(uint64_t) * numOfRead,
                                  &(h_reads.start_[0]));
-        queue.enqueueWriteBuffer(cl_d_reads.end_, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_reads.end_, CL_TRUE, 0,
                                  sizeof(uint64_t) * numOfRead,
                                  &(h_reads.end_[0]));
-        queue.enqueueWriteBuffer(cl_d_reads.strand, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_reads.strand, CL_TRUE, 0,
                                  sizeof(uint8_t) * numOfRead,
                                  &(h_reads.strand[0]));
-        /*
-        queue.enqueueWriteBuffer(cl_d_reads.core, CL_FALSE, 0,
+        
+        queue.enqueueWriteBuffer(cl_d_reads.core, CL_TRUE, 0,
                                  sizeof(read_core_t) * numOfRead,
                                  h_reads.core.data());
-        */
+        
         return cl_d_reads;
 }
 
@@ -78,16 +78,16 @@ cl_d_Bins cl_chipMallocBin(cl::CommandQueue &queue, cl::Context &contexts,
                            h_Bins &h_bins, int32_t numOfBin)
 {
         cl_d_Bins cl_d_bins(contexts, numOfBin);
-        queue.enqueueWriteBuffer(cl_d_bins.start_, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_bins.start_, CL_TRUE, 0,
                                  sizeof(uint64_t) * numOfBin,
                                  &(h_bins.start_[0]));
-        queue.enqueueWriteBuffer(cl_d_bins.end_, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_bins.end_, CL_TRUE, 0,
                                  sizeof(uint64_t) * numOfBin,
                                  &(h_bins.end_[0]));
-        queue.enqueueWriteBuffer(cl_d_bins.strand, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_bins.strand, CL_TRUE, 0,
                                  sizeof(uint8_t) * numOfBin,
                                  &(h_bins.strand[0]));
-        queue.enqueueWriteBuffer(cl_d_bins.core, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_bins.core, CL_TRUE, 0,
                                  sizeof(bin_core_t) * numOfBin,
                                  &(h_bins.core[0]));
         return cl_d_bins;
@@ -121,17 +121,17 @@ cl_d_ASEs cl_chipMallocASE(cl::CommandQueue &queue, cl::Context &contexts,
 {
         cl_d_ASEs cl_d_ases(contexts, numOfASE);
 	cl_int err;
-        err = queue.enqueueWriteBuffer(cl_d_ases.start_, CL_FALSE, 0,
+        err = queue.enqueueWriteBuffer(cl_d_ases.start_, CL_TRUE, 0,
                                  sizeof(uint64_t) * numOfASE,
                                  &(h_ases.start_[0]));
 	checkCLIOBuffer(err,__LINE__);
-        queue.enqueueWriteBuffer(cl_d_ases.end_, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_ases.end_, CL_TRUE, 0,
                                  sizeof(uint64_t) * numOfASE,
                                  &(h_ases.end_[0]));
-        queue.enqueueWriteBuffer(cl_d_ases.strand, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_ases.strand, CL_TRUE, 0,
                                  sizeof(uint8_t) * numOfASE,
                                  &(h_ases.strand[0]));
-        queue.enqueueWriteBuffer(cl_d_ases.core, CL_FALSE, 0,
+        queue.enqueueWriteBuffer(cl_d_ases.core, CL_TRUE, 0,
                                  sizeof(ase_core_t) * numOfASE,
                                  &(h_ases.core[0]));
         return cl_d_ases;
@@ -247,7 +247,8 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
             initCompileKernel_List(CLEnv.selectedDevices, CLEnv.context);
 
         cl::Buffer cl_assist_reads(CLEnv.context, CL_MEM_READ_WRITE,
-                                   sizeof(Assist) * numOfRead, NULL);
+                                   sizeof(Assist) * numOfBin, NULL,&err);
+	checkCLBuffer(err,__LINE__);
         cl::NDRange offset(0, 0);
         cl::NDRange global_size(nBlock*blockSize, 1);
         cl::NDRange local_size(blockSize, 1);
@@ -311,8 +312,13 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
                              sizeof(float) * numOfBin, NULL);
         cl::Buffer d_tpmCounter(CLEnv.context, CL_MEM_READ_WRITE,
                                 sizeof(float) * tpmSize, NULL);
-        queue.enqueueFillBuffer(d_tempTPM, 0, 0, numOfBin*sizeof(float));
-        queue.enqueueFillBuffer(d_tpmCounter, 0, 0, tpmSize*sizeof(float));
+	cl_float fillPattern = 0.0f;
+        queue.enqueueFillBuffer(d_tempTPM, &fillPattern, 0, numOfBin*sizeof(float));
+        err = queue.enqueueFillBuffer(d_tpmCounter, &fillPattern, 0, tpmSize*sizeof(float));
+	if (err!= CL_SUCCESS){
+		printf("fill error\n");
+	}
+	queue.finish();
 
         std::cout << "starting count tpm..." << std::endl;
         /*DONE CL:count tempTPM,reduce singlePass,countTPM*/
@@ -330,10 +336,18 @@ void cl_HandleBin(h_Bins &h_bins, h_Reads &h_reads, h_ASEs &h_ases)
         //                              global_size, local_size);
         // queue.enqueueBarrierWithWaitList();
         boost::compute::vector<float> bc_tempTPM(numOfBin, bc_context);
+	float *h_tempTPM;
+	h_tempTPM = new float [numOfBin];
+	queue.enqueueReadBuffer(d_tempTPM,CL_TRUE,0,sizeof(float)*numOfBin,h_tempTPM);
+	queue.finish();
+	boost::compute::copy(bc_tempTPM.begin(),bc_tempTPM.end(),h_tempTPM,bc_queue);
+	bc_queue.finish();
+	delete[] h_tempTPM;
         float bc_tpmCounter = 0.0f;
         boost::compute::reduce(bc_tempTPM.begin(), bc_tempTPM.end(),
                                &bc_tpmCounter,boost::compute::plus<float>(),bc_queue);
-        queue.enqueueWriteBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
+	bc_queue.finish();
+        queue.enqueueReadBuffer(d_tpmCounter, CL_TRUE, 0, sizeof(float),
                                  &bc_tpmCounter);
         autoSetKernelArgs(allKernel.gpu_count_TPM, cl_d_bins.start_,
                           cl_d_bins.end_, cl_d_bins.strand, cl_d_bins.core,
