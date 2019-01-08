@@ -348,7 +348,7 @@ gather,and then reuse cl_chipMalloc to memcpy.
     queue.enqueueFillBuffer(d_tempTPM, &fillPattern, 0,
                             numOfBin * sizeof(float));
     err = queue.enqueueFillBuffer(d_tpmCounter, &fillPattern, 0,
-                                  tpmSize * sizeof(float));
+                                  1 * sizeof(float));
     if (err != CL_SUCCESS) {
         printf("fill error\n");
     }
@@ -375,6 +375,11 @@ gather,and then reuse cl_chipMalloc to memcpy.
     queue.enqueueReadBuffer(d_tempTPM, CL_TRUE, 0, sizeof(float) * numOfBin,
                             h_tempTPM);
     queue.finish();
+    float h_sum = 0.0f;
+    for (int i = 0;i<numOfBin;i++){
+            h_sum += h_tempTPM[i];
+    }
+    printf("h_sum %f\n",h_sum);
     boost::compute::copy(h_tempTPM,h_tempTPM+numOfBin,bc_tempTPM.begin(),
                          bc_queue);
     bc_queue.finish();
@@ -433,7 +438,7 @@ gather,and then reuse cl_chipMalloc to memcpy.
     // count psi
     /*DONE CL: count PSI*/
     size_t psiSize = sizeof(ASEPsi) * numOfASE;
-    cl::Buffer d_ase_psi(CLEnv.context, CL_MEM_READ_WRITE, psiSize);
+    cl::Buffer d_ase_psi(CLEnv.context, CL_MEM_READ_WRITE, sizeof(ASEPsi)*numOfASE);
     std::cout << "starting count psi..." << std::endl;
 
     autoSetKernelArgs(allKernel.gpu_count_PSI, cl_d_ases.start_, cl_d_ases.end_,
