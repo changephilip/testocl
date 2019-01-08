@@ -19,8 +19,8 @@ typedef ulong uint64_t;
 typedef int int32_t;
 typedef uint uint32_t;
 // maximum field size
-#define nameSize  24
-#define gidSize  96
+#define nameSize 24
+#define gidSize 96
 
 #define SINGLE_END
 #ifdef SINGLE_END
@@ -41,7 +41,7 @@ constant int blockSize = 1024;
 constant float step_psi = 0.01;
 constant int readLength = 100;
 
-typedef struct  {
+typedef struct {
     // int32_t start_ = 0;
     // int32_t end_ = 0;
     int32_t start_;
@@ -49,7 +49,7 @@ typedef struct  {
 
 } Junction, Anchor, Assist;
 
-typedef struct  {
+typedef struct {
     // with junction
     // uint32_t junctionCount = 0;
     uint32_t junctionCount;
@@ -67,7 +67,7 @@ typedef struct  {
     //        for (int i = 0; i < junctionSize; i++) junctions[i].start_ =
     //        junctions[i].end_ = 0;
     //    }
-}read_core_t;
+} read_core_t;
 
 typedef struct {
     int32_t gid_h;
@@ -84,7 +84,7 @@ typedef struct {
     JunctionTag tag;
 } ASERelated;
 
-typedef struct  {
+typedef struct {
     Anchor artRange;
     // int32_t anchor[anchorCount] = {0};
     int32_t anchor[anchorCount];
@@ -95,9 +95,9 @@ typedef struct  {
         c_memset(&anchor, 0, sizeof(int32_t) * anchorCount);
     }
     */
-}ASECounter;
+} ASECounter;
 
-typedef struct  {
+typedef struct {
     // int32_t name_h = 0;
     // uint32_t readCount = 0;
     // float tpmCount = 0.0;
@@ -116,9 +116,9 @@ typedef struct  {
 
     bin_core_t() {}
     */
-}bin_core_t ;
+} bin_core_t;
 
-typedef struct  {
+typedef struct {
     // int32_t gid_h = 0;
     // int32_t bin_h = 0;
     int32_t gid_h;
@@ -131,7 +131,7 @@ ase_core_t(int32_t gid) { gid_h = gid; bin_h = 0; }
 
 ase_core_t() {}
     */
-}ase_core_t;
+} ase_core_t;
 
 typedef struct {
     int32_t gid_h;
@@ -143,9 +143,11 @@ typedef struct {
     float ciStart;
     float ciEnd;
 } ASEPsi;
-ASEPsi iniASEPsi(int32_t gid_h,int32_t bin_h,float countIn,int32_t countOut,float psi,float ciStart,float ciEnd){
-	ASEPsi thisASEPsi = {gid_h,bin_h,countIn,countOut,psi,ciStart,ciEnd};
-	return thisASEPsi; 
+ASEPsi iniASEPsi(int32_t gid_h, int32_t bin_h, float countIn, int32_t countOut,
+                 float psi, float ciStart, float ciEnd)
+{
+    ASEPsi thisASEPsi = {gid_h, bin_h, countIn, countOut, psi, ciStart, ciEnd};
+    return thisASEPsi;
 }
 __kernel void gather_kernel(__global int32_t *indices,
                             __global read_core_t *d_cores_in,
@@ -153,26 +155,37 @@ __kernel void gather_kernel(__global int32_t *indices,
                             uint64_t numOfRead)
 {
     int32_t threadId = get_group_id(0) * get_local_size(0) + get_local_id(0);
-    //read_core_t tmp;
+    // read_core_t tmp;
     if (threadId < numOfRead) {
-    	int32_t targetId = indices[threadId];
-	//tmp.junctionCount = d_cores_in[targetId].junctionCount;
-	//tmp = d_c
+        int32_t targetId = indices[threadId];
+        // tmp.junctionCount = d_cores_in[targetId].junctionCount;
+        // tmp = d_c
         d_reads_core[threadId] = d_cores_in[targetId];
-	/*
-	d_reads_core[threadId].junctionCount = d_cores_in[targetId].junctionCount;
-	d_reads_core[threadId].junctions[0].start_ = d_cores_in[targetId].junctions[0].start_;
-	d_reads_core[threadId].junctions[0].end_ = d_cores_in[targetId].junctions[0].end_;
-	d_reads_core[threadId].junctions[1].start_ = d_cores_in[targetId].junctions[1].start_;
-	d_reads_core[threadId].junctions[1].end_ = d_cores_in[targetId].junctions[1].end_;
-	d_reads_core[threadId].junctions[2].start_ = d_cores_in[targetId].junctions[2].start_;
-	d_reads_core[threadId].junctions[2].end_ = d_cores_in[targetId].junctions[2].end_;
-	d_reads_core[threadId].junctions[3].start_ = d_cores_in[targetId].junctions[3].start_;
-	d_reads_core[threadId].junctions[3].end_ = d_cores_in[targetId].junctions[3].end_;
-	d_reads_core[threadId].junctions[4].start_ = d_cores_in[targetId].junctions[4].start_;
-	d_reads_core[threadId].junctions[4].end_ = d_cores_in[targetId].junctions[4].end_;
-	*/
-   }
+        /*
+        d_reads_core[threadId].junctionCount =
+        d_cores_in[targetId].junctionCount;
+        d_reads_core[threadId].junctions[0].start_ =
+        d_cores_in[targetId].junctions[0].start_;
+        d_reads_core[threadId].junctions[0].end_ =
+        d_cores_in[targetId].junctions[0].end_;
+        d_reads_core[threadId].junctions[1].start_ =
+        d_cores_in[targetId].junctions[1].start_;
+        d_reads_core[threadId].junctions[1].end_ =
+        d_cores_in[targetId].junctions[1].end_;
+        d_reads_core[threadId].junctions[2].start_ =
+        d_cores_in[targetId].junctions[2].start_;
+        d_reads_core[threadId].junctions[2].end_ =
+        d_cores_in[targetId].junctions[2].end_;
+        d_reads_core[threadId].junctions[3].start_ =
+        d_cores_in[targetId].junctions[3].start_;
+        d_reads_core[threadId].junctions[3].end_ =
+        d_cores_in[targetId].junctions[3].end_;
+        d_reads_core[threadId].junctions[4].start_ =
+        d_cores_in[targetId].junctions[4].start_;
+        d_reads_core[threadId].junctions[4].end_ =
+        d_cores_in[targetId].junctions[4].end_;
+        */
+    }
 }
 
 void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
@@ -190,7 +203,8 @@ void gpu_try_assign_kernel(uint64_t bin_start, uint64_t bin_end, uint32_t id,
         else
             right = mid_l;
     }
-    if (left != numOfEntry) d_assist[id].start_ = left;
+    if (left != numOfEntry)
+        d_assist[id].start_ = left;
     else {
         d_assist[id].start_ = d_assist[id].end_ = 0;
         return;
@@ -225,18 +239,18 @@ __kernel void gpu_assign_read_kernel(
     if (binId < numOfBin) {
         gpu_try_assign_kernel(d_bins_start_[binId], d_bins_end_[binId], binId,
                               d_reads_start_, numOfRead, d_assist);
-    
-    	mem_fence(CLK_GLOBAL_MEM_FENCE);
 
-    	for (int readId = d_assist[binId].start_; readId < d_assist[binId].end_;
-         readId++) {
-        	if ((d_reads_strand[readId] != d_bins_strand[binId]) ||
-            		(d_reads_end_[readId] > d_bins_end_[binId]))
-            		temp++;
-    		}
-    		d_bins_core[binId].readCount =
-        	d_assist[binId].end_ - d_assist[binId].start_ - temp;
-	}
+        mem_fence(CLK_GLOBAL_MEM_FENCE);
+
+        for (int readId = d_assist[binId].start_; readId < d_assist[binId].end_;
+             readId++) {
+            if ((d_reads_strand[readId] != d_bins_strand[binId]) ||
+                (d_reads_end_[readId] > d_bins_end_[binId]))
+                temp++;
+        }
+        d_bins_core[binId].readCount =
+            d_assist[binId].end_ - d_assist[binId].start_ - temp;
+    }
 }
 __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
                                 __global uint64_t *d_bins_end_,
@@ -255,8 +269,8 @@ __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
 __kernel void gpu_count_TPM(__global uint64_t *d_bins_start_,
                             __global uint64_t *d_bins_end_,
                             __global uint8_t *d_bins_strand,
-                            __global bin_core_t *d_bins_core,
-                            int32_t numOfBin, __global float *d_tempTPM,
+                            __global bin_core_t *d_bins_core, int32_t numOfBin,
+                            __global float *d_tempTPM,
                             __global float *d_tpmCounter)
 {
     int32_t binId = get_group_id(0) * get_local_size(0) + get_local_id(0);
@@ -280,17 +294,16 @@ __kernel void gpu_assign_ASE_kernel(
         gpu_try_assign_kernel(d_bins_start_[binId], d_bins_end_[binId], binId,
                               d_ases_start_, numOfASE, d_assist);
         mem_fence(CLK_GLOBAL_MEM_FENCE);
-    
 
-    for (int32_t aseId = d_assist[binId].start_; aseId < d_assist[binId].end_;
-         aseId++) {
-        if ((d_ases_strand[aseId] == d_bins_strand[binId]) &&
-            (d_ases_end_[aseId] <= d_bins_end_[binId])) {
-            d_ases_core[aseId].bin_h = d_bins_core[binId].name_h;
-        } else {
-            d_ases_core[aseId].bin_h = 0;
+        for (int32_t aseId = d_assist[binId].start_;
+             aseId < d_assist[binId].end_; aseId++) {
+            if ((d_ases_strand[aseId] == d_bins_strand[binId]) &&
+                (d_ases_end_[aseId] <= d_bins_end_[binId])) {
+                d_ases_core[aseId].bin_h = d_bins_core[binId].name_h;
+            } else {
+                d_ases_core[aseId].bin_h = 0;
+            }
         }
-	}
     }
 }
 
@@ -325,7 +338,7 @@ __kernel void gpu_assign_read_ASE_kernel(
 #ifdef SE_ANCHOR
                 junctionCount = d_reads_core[readId].junctionCount;
                 if (junctionCount) {
-//#pragma unroll
+                        //#pragma unroll
                     for (int32_t jId = 0; jId < junctionCount; jId++) {
                         junction_s =
                             d_reads_core[readId].junctions[jId].start_ +
@@ -355,7 +368,7 @@ __kernel void gpu_assign_read_ASE_kernel(
                         }
                     }
                 } else {
-                    if ((read_s >= coord[2] && read_e <= coord[3]) ||
+                    if ((read_s >= coord[2] && read_s <= coord[3]) ||
                         (read_e >= coord[2] && read_e <= coord[3])) {
                         ACT[aseId].anchor[3]++;
                     }
@@ -363,7 +376,7 @@ __kernel void gpu_assign_read_ASE_kernel(
 #elif defined(RI_ANCHOR)
                 junctionCount = d_reads_core[readId].junctionCount;
                 if (junctionCount) {
-//#pragma unroll
+                    //#pragma unroll
                     for (int32_t jId = 0; jId < junctionCount; jId++) {
                         junction_s = d_reads_core[readId].junctions[jId].start +
                                      +read_s - 1;
@@ -401,8 +414,8 @@ __kernel void gpu_assign_read_ASE_kernel(
 __kernel void gpu_count_PSI(__global uint64_t *d_ases_start_,
                             __global uint64_t *d_ases_end_,
                             __global uint8_t *d_ases_strand,
-                            __global ase_core_t *d_ases_core,
-                            int32_t numOfASE, __global ASEPsi *d_ase_psi,
+                            __global ase_core_t *d_ases_core, int32_t numOfASE,
+                            __global ASEPsi *d_ase_psi,
                             __global ASECounter *ACT)
 {
     int32_t aseId = get_group_id(0) * get_local_size(0) + get_local_id(0);
@@ -427,13 +440,9 @@ __kernel void gpu_count_PSI(__global uint64_t *d_ases_start_,
         countOut = act.anchor[1];
         psi = countIn / (countIn + countOut);
 #endif
-        d_ase_psi[aseId] = iniASEPsi(d_ases_core[aseId].gid_h,
-                                  d_ases_core[aseId].bin_h,
-                                  countIn,
-                                  countOut,
-                                  psi,
-                                  0,
-                                  0);
+        d_ase_psi[aseId] =
+            iniASEPsi(d_ases_core[aseId].gid_h, d_ases_core[aseId].bin_h,
+                      countIn, countOut, psi, 0, 0);
         mem_fence(CLK_GLOBAL_MEM_FENCE);
     }
 }
