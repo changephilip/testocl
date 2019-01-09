@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <CL/cl.h>
 #include <CL/cl.hpp>
+#include "c_string.h"
 // boost
 #define BOOST_COMPUTE_DEBUG_KERNEL_COMPILATION
 #include <boost/serialization/vector.hpp>
@@ -120,7 +121,7 @@ struct  CL_ALIGN(32) ASECounter {
     int32_t anchor[anchorCount];
 
     ASECounter() {
-        memset(&anchor, 0, sizeof(int32_t) * anchorCount);
+        c_memset(&anchor, 0, sizeof(int32_t) * anchorCount);
     }
 };
 

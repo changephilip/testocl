@@ -269,6 +269,10 @@ gather,and then reuse cl_chipMalloc to memcpy.
     fillAssist.start_=0;
     fillAssist.end_ =0 ;
     err = queue.enqueueFillBuffer(cl_assist_reads,&fillAssist,0,numOfBin*sizeof(Assist));
+    if (err != CL_SUCCESS) {
+        printf("fill error\n");
+    }
+
     checkCLBuffer(err, __LINE__);
     cl::NDRange offset(0, 0);
     cl::NDRange global_size(nBlock * blockSize, 1);
@@ -342,11 +346,11 @@ gather,and then reuse cl_chipMalloc to memcpy.
                          sizeof(float) * numOfBin, NULL);
     cl::Buffer d_tpmCounter(CLEnv.context, CL_MEM_READ_WRITE,
                             sizeof(float) * tpmSize, NULL);
-    cl_float fillPattern = 0.0f;
-    queue.enqueueFillBuffer(d_tempTPM, &fillPattern, 0,
-                            numOfBin * sizeof(float));
-    err = queue.enqueueFillBuffer(d_tpmCounter, &fillPattern, 0,
-                                  1 * sizeof(float));
+    //cl_float fillPattern = 0.0f;
+    //queue.enqueueFillBuffer(d_tempTPM, &fillPattern, 0,
+     //                       numOfBin * sizeof(float));
+    //err = queue.enqueueFillBuffer(d_tpmCounter, &fillPattern, 0,
+     //                             1 * sizeof(float));
     if (err != CL_SUCCESS) {
         printf("fill error\n");
     }

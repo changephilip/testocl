@@ -191,7 +191,7 @@ __kernel void gather_kernel(__global int32_t *indices,
         d_cores_in[targetId].junctions[4].start_;
         d_reads_core[threadId].junctions[4].end_ =
         d_cores_in[targetId].junctions[4].end_;
-        */
+	*/
     }
 }
 
