@@ -150,7 +150,7 @@ typedef struct {
     float ciStart;
     float ciEnd;
 } ASEPsi;
-ASEPsi iniASEPsi(int32_t gid_h, int32_t bin_h, float countIn, int32_t countOut,
+ASEPsi iniASEPsi(uint64_t gid_h, uint64_t bin_h, float countIn, int32_t countOut,
                  float psi, float ciStart, float ciEnd)
 {
     ASEPsi thisASEPsi = {gid_h, bin_h, countIn, countOut, psi, ciStart, ciEnd};
@@ -263,7 +263,7 @@ __kernel void gpu_count_tempTPM(__global uint64_t *d_bins_start_,
                                 __global uint64_t *d_bins_end_,
                                 __global uint8_t *d_bins_strand,
                                 __global bin_core_t *d_bins_core,
-                                int32_t numOfBin, __global float *d_tempTPM)
+                                int32_t numOfBin,  __global float* d_tempTPM)
 {
     int32_t binId = get_group_id(0) * get_local_size(0) + get_local_id(0);
 
@@ -278,13 +278,13 @@ __kernel void gpu_count_TPM(__global uint64_t *d_bins_start_,
                             __global uint8_t *d_bins_strand,
                             __global bin_core_t *d_bins_core, int32_t numOfBin,
                             __global float *d_tempTPM,
-                            __global float *d_tpmCounter)
+                            float d_tpmCounter)
 {
     int32_t binId = get_group_id(0) * get_local_size(0) + get_local_id(0);
     if (binId < numOfBin) {
-        if (*d_tpmCounter == 0) return;
+        if (d_tpmCounter == 0) return;
         d_bins_core[binId].tpmCount =
-            1000000 * d_tempTPM[binId] / (*d_tpmCounter);
+            1000000 * d_tempTPM[binId] / (d_tpmCounter);
     }
 }
 

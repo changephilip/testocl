@@ -395,7 +395,7 @@ gather,and then reuse cl_chipMalloc to memcpy.
                             &bc_tpmCounter);
     autoSetKernelArgs(allKernel.gpu_count_TPM, cl_d_bins.start_, cl_d_bins.end_,
                       cl_d_bins.strand, cl_d_bins.core, numOfBin, d_tempTPM,
-                      d_tpmCounter);
+                      bc_tpmCounter);
     err = queue.enqueueNDRangeKernel(allKernel.gpu_count_TPM, offset,
                                      global_size, local_size);
     checkCLEnqueue(err, __LINE__);
