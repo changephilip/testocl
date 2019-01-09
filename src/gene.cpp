@@ -3,8 +3,8 @@
 #include "cl_cpp_utility.cpp"
 #include "parse.h"
 #include <numeric>
-BOOST_COMPUTE_ADAPT_STRUCT(Junction, Junction, (start_, end_))
-BOOST_COMPUTE_ADAPT_STRUCT(read_core_t, read_core_t, (junctionCount, junctions))
+//BOOST_COMPUTE_ADAPT_STRUCT(Junction, Junction, (start_, end_))
+//BOOST_COMPUTE_ADAPT_STRUCT(read_core_t, read_core_t, (junctionCount, junctions))
 int32_t nextPow2(int32_t x)
 {
     --x;
@@ -46,20 +46,22 @@ cl_d_Reads cl_chipMallocRead(cl::CommandQueue &queue, cl::Context &contexts,
                              sizeof(uint64_t) * numOfRead, &(h_reads.end_[0]));
     queue.enqueueWriteBuffer(cl_d_reads.strand, CL_TRUE, 0,
                              sizeof(uint8_t) * numOfRead, &(h_reads.strand[0]));
-    
+    /*
     read_core_t fillCore;
     fillCore.junctionCount=0;
     for (int i=0;i<junctionSize;i++){
 	fillCore.junctions[i].start_=0;
 	fillCore.junctions[i].end_=0;
 	}
+	
     cl_int err = queue.enqueueFillBuffer(cl_d_reads.core, &fillCore, 0,
                                   numOfRead * sizeof(read_core_t));
-	/*
+	*/
+    	
     queue.enqueueWriteBuffer(cl_d_reads.core, CL_TRUE, 0,
                              sizeof(read_core_t) * numOfRead,
                              &(h_reads.core[0]));
-   */ 
+     
     return cl_d_reads;
 }
 
@@ -282,14 +284,10 @@ gather,and then reuse cl_chipMalloc to memcpy.
 
     // copy and gather bc_d_cores
     // first transfer indices to host
-    std::vector<int> h_indices(numOfRead);
-    boost::compute::copy(d_indices.begin(), d_indices.end(), h_indices.begin(),
-                         bc_queue);
     int32_t *indices;
     indices = new int32_t[numOfRead];
-    for (int32_t i = 0; i < numOfRead; ++i) {
-        indices[i] = h_indices[i];
-    }
+    boost::compute::copy(d_indices.begin(), d_indices.end(), indices,
+                         bc_queue);
     // allocate cl_d_indices, cores_in on device and h_core on host
     cl::Buffer cl_d_indices(CLEnv.context, CL_MEM_READ_WRITE,
                             sizeof(int32_t) * numOfRead, NULL);

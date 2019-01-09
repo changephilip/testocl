@@ -24,13 +24,7 @@
 #include <sys/time.h>
 #endif
 
-#if defined(__CUDACC__) // NVCC
-    #define ALIGN(n) __align__(n)
-#elif defined(__GNUC__) // GCC
-    #define ALIGN(n) __attribute__((aligned(n)))
-#else
-    #error "can't find align directive."
-#endif
+#define CL_ALIGN(_x) __attribute__((aligned(_x)))
 
 #define SE_ANCHOR
 #ifdef SE_ANCHOR
@@ -70,12 +64,12 @@ const int blockSize = 1024;
 const float step = 0.01;
 const int readLength = 100;
 
-typedef struct  {
+typedef struct CL_ALIGN(4) {
     int32_t start_;
     int32_t end_;
 } Junction, Anchor, Assist;
 
-struct  read_core_t {
+struct CL_ALIGN(8) read_core_t {
     // with junction
     uint32_t junctionCount;
     Junction junctions[junctionSize];
@@ -121,7 +115,7 @@ typedef struct {
     JunctionTag tag;
 } ASERelated;
 
-typedef struct  ASECounter {
+struct  CL_ALIGN(32) ASECounter {
     Anchor artRange;
     int32_t anchor[anchorCount];
 
@@ -130,7 +124,7 @@ typedef struct  ASECounter {
     }
 };
 
-struct  bin_core_t {
+struct CL_ALIGN(32)  bin_core_t {
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)

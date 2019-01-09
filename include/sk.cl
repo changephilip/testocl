@@ -13,7 +13,7 @@
 #endif
 #endif
 
-#define CL_ALIGNED(_x) __attribute__((aligned(_x)))
+#define CL_ALIGN(_x) __attribute__((aligned(_x)))
 typedef uchar uint8_t;
 typedef ulong uint64_t;
 typedef int int32_t;
@@ -29,10 +29,10 @@ typedef uint uint32_t;
 #define junctionSize 10
 #endif
 
-// constant uint64_t refLength = (uint64_t)2 << 31;
-constant uint64_t refLength = 0x100000000;
-// constant uint64_t invalidLength = refLength << 5;
-constant uint64_t invalidLength = 0x2000000000U;
+//constant uint64_t refLength = (uint64_t)2 << 31;
+constant uint64_t refLength = (uint64_t)0x100000000;
+//constant uint64_t invalidLength = refLength << 5;
+constant uint64_t invalidLength = (uint64_t)0x2000000000U;
 
 // kernel parameters
 constant int blockSize = 1024;
@@ -41,7 +41,7 @@ constant int blockSize = 1024;
 constant float step_psi = 0.01;
 constant int readLength = 100;
 
-typedef struct {
+typedef struct CL_ALIGN(4){
     // int32_t start_ = 0;
     // int32_t end_ = 0;
     int32_t start_;
@@ -49,7 +49,7 @@ typedef struct {
 
 } Junction, Anchor, Assist;
 
-typedef struct {
+typedef struct CL_ALIGN(8) {
     // with junction
     // uint32_t junctionCount = 0;
     uint32_t junctionCount;
@@ -70,7 +70,8 @@ typedef struct {
 } read_core_t;
 
 typedef struct {
-    int32_t gid_h;
+    //size_t gid_h;
+    uint64_t gid_h;
     uint32_t anchorIndex;
 } JunctionTag;
 
@@ -84,7 +85,7 @@ typedef struct {
     JunctionTag tag;
 } ASERelated;
 
-typedef struct {
+typedef struct CL_ALIGN(32) {
     Anchor artRange;
     // int32_t anchor[anchorCount] = {0};
     int32_t anchor[anchorCount];
@@ -97,11 +98,12 @@ typedef struct {
     */
 } ASECounter;
 
-typedef struct {
+typedef struct CL_ALIGN(32){
     // int32_t name_h = 0;
     // uint32_t readCount = 0;
     // float tpmCount = 0.0;
-    int32_t name_h;
+    //size_t name_h;
+    uint64_t name_h;
     uint32_t readCount;
     float tpmCount;
 
@@ -121,21 +123,26 @@ typedef struct {
 typedef struct {
     // int32_t gid_h = 0;
     // int32_t bin_h = 0;
-    int32_t gid_h;
-    int32_t bin_h;
+    // size_t gid_h;
+    // size_t bin_h;
+    uint64_t gid_h;
+    uint64_t bin_h;
 
     int32_t coordinates[coordinateCount];
     /*
 __host__ __device__
-ase_core_t(int32_t gid) { gid_h = gid; bin_h = 0; }
+ase_core_t(uint64_t gid) { gid_h = gid; bin_h = 0; }
 
 ase_core_t() {}
     */
 } ase_core_t;
 
 typedef struct {
-    int32_t gid_h;
-    int32_t bin_h;
+    //size_t gid_h;
+    //size_t bin_h;
+    uint64_t gid_h;
+    uint64_t bin_h;
+
     float countIn;
     int32_t countOut;
     float psi;  // by sum(anchors)
