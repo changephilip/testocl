@@ -1,3 +1,4 @@
+#cmake3 -DOPENCL_LIBRARIES=/usr/lib64/libOpenCL.so -DOPENCL_INCLUDE_DIR=/usr/local/cuda/include/ .. 
 cmake_minimum_required(VERSION 3.5)
 project(OCLCHIP)
 
